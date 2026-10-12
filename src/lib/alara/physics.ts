@@ -1,6 +1,6 @@
 export type ProcedureId = "ortho" | "cardio" | "vascular";
 export type ApronId = "none" | "pb025" | "pb05";
-export type ProfessionalId = "surgeon" | "anesthetist" | "nurse";
+export type ProfessionalId = "tech" | "surgeon" | "anesthetist" | "nurse";
 
 export const PROCEDURES: Record<ProcedureId, { label: string; baseRate: number }> = {
   ortho: { label: "Ortopedia (Enclavamento Intramedular de Fémur)", baseRate: 8 },
@@ -15,9 +15,10 @@ export const APRONS: Record<ApronId, { label: string; mmPb: number }> = {
 };
 
 export const PROFESSIONALS: Record<ProfessionalId, { label: string; short: string }> = {
+  tech: { label: "Técnico de Radiologia", short: "TEC" },
   surgeon: { label: "Cirurgião Principal", short: "CIR" },
   anesthetist: { label: "Anestesista", short: "ANE" },
-  nurse: { label: "Enf. Instrumentista", short: "ENF" },
+  nurse: { label: "Enfermeiro", short: "ENF" },
 };
 
 /** Linear attenuation coefficient of lead (~80 kVp scatter), per mm. */

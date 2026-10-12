@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EducacaoRouteImport } from './routes/educacao'
+import { Route as HistoricoRouteImport } from './routes/historico'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EducacaoRoute = EducacaoRouteImport.update({
+  id: '/educacao',
+  path: '/educacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/educacao': typeof EducacaoRoute
+  '/historico': typeof HistoricoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/educacao': typeof EducacaoRoute
+  '/historico': typeof HistoricoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/educacao': typeof EducacaoRoute
+  '/historico': typeof HistoricoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/educacao' | '/historico'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/educacao' | '/historico'
+  id: '__root__' | '/' | '/educacao' | '/historico'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EducacaoRoute: typeof EducacaoRoute
+  HistoricoRoute: typeof HistoricoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/educacao': {
+      id: '/educacao'
+      path: '/educacao'
+      fullPath: '/educacao'
+      preLoaderRoute: typeof EducacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EducacaoRoute: EducacaoRoute,
+  HistoricoRoute: HistoricoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

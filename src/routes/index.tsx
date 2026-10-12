@@ -24,6 +24,7 @@ export const Route = createFileRoute("/")({
 });
 
 const initialPos: Record<ProfessionalId, Pos> = {
+  tech: { x: SOURCE.x - 150, y: SOURCE.y + 130 },
   surgeon: { x: SOURCE.x, y: SOURCE.y + 100 },
   anesthetist: { x: SOURCE.x - 200, y: SOURCE.y - 70 },
   nurse: { x: SOURCE.x + 150, y: SOURCE.y - 130 },
@@ -38,7 +39,7 @@ function Simulator() {
   const [apron, setApron] = useState<ApronId>("none");
   const [thyroidGlasses, setTG] = useState(false);
   const [positions, setPositions] = useState(initialPos);
-  const [selected, setSelected] = useState<ProfessionalId>("surgeon");
+  const [selected, setSelected] = useState<ProfessionalId>("tech");
   const [showIcrp, setShowIcrp] = useState(false);
   const [saved, setSaved] = useState(false);
 

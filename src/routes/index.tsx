@@ -70,6 +70,7 @@ function Simulator() {
     const t = setTimeout(() => {
       const p = prev.current;
       const d = result.dose;
+      if (p.sel !== selected) { prev.current = { sel: selected, distance, minutes, apron, thyroidGlasses, procedure, dose: d }; return; }
       if (Math.abs(d - p.dose) < 1e-6) return;
       const pct = Math.abs((1 - d / p.dose) * 100);
       const dir = d < p.dose ? "reduziu" : "aumentou";

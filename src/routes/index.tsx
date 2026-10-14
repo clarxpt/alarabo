@@ -151,6 +151,11 @@ function Simulator() {
               <span>0</span><span>5</span><span>20</span><span>40+ µSv</span>
             </div>
             <div className={`mt-3 text-sm font-medium ${riskText[level]}`}>● {RISK_LABEL[level]}</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Posição: <span className="font-medium text-foreground">{SIDE_LABEL[side]}</span>
+              {side === "tube" && " — a dispersão é ~1,5× maior do lado da ampola."}
+              {side === "detector" && " — a dispersão é ~40% menor do lado do detetor."}
+            </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               <Stat label="Taxa a 1 m" value={`${fmt(result.baseRate, 1)} µSv/min`} />
               <Stat label="Sem blindagem" value={`${fmt(result.unshielded, 1)} µSv`} />

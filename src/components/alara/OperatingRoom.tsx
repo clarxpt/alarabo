@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { PROFESSIONALS, type ProfessionalId, riskLevel } from "@/lib/alara/physics";
 
-const W = 600, H = 460, SCALE = 100; // 100 px = 1 m
+const W = 640, H = 640, SCALE = 60; // 60 px = 1 m — room radius 5 m
 export const SOURCE = { x: 300, y: 230 };
 
 export interface Pos { x: number; y: number }

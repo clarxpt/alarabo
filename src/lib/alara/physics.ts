@@ -78,7 +78,7 @@ export interface DoseResult {
 export function computeDose(i: DoseInput): DoseResult {
   const baseRate = PROCEDURES[i.procedure].baseRate * SCATTER_FACTOR_USV;
   const d = Math.max(0.1, i.distance);
-  const rateAtDistance = baseRate * (D_REF / d) ** 2;
+  const rateAtDistance = baseRate * (D_REF / d) ** 2 * sideFactor(i.side ?? "lateral");
   const unshielded = rateAtDistance * i.minutes;
   let transmission = Math.exp(-MU_PB * APRONS[i.apron].mmPb);
   if (i.thyroidGlasses) transmission *= THYROID_GLASSES_FACTOR;

@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { PROFESSIONALS, type ProfessionalId, riskLevel } from "@/lib/alara/physics";
 
 const W = 640, H = 640, SCALE = 60; // 60 px = 1 m — room radius 5 m
-export const SOURCE = { x: 300, y: 230 };
+export const SOURCE = { x: 320, y: 320 };
 
 export interface Pos { x: number; y: number }
 
@@ -39,7 +39,7 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
     p = { x: Math.min(W - 20, Math.max(20, p.x)), y: Math.min(H - 20, Math.max(20, p.y)) };
     const d = distanceOf(p);
     if (d < 0.5) p = placeAt(p, 0.5);
-    if (d > 3) p = placeAt(p, 3);
+    if (d > 5) p = placeAt(p, 5);
     onMove(drag.current, p);
   };
 
@@ -66,8 +66,8 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
         </radialGradient>
       </defs>
       <rect width={W} height={H} fill="url(#grid)" />
-      <circle cx={SOURCE.x} cy={SOURCE.y} r={300} fill="url(#heat)" className="animate-beam" />
-      {[0.5, 1, 2, 3].map((m) => (
+      <circle cx={SOURCE.x} cy={SOURCE.y} r={5 * SCALE} fill="url(#heat)" className="animate-beam" />
+      {[1, 2, 3, 4, 5].map((m) => (
         <g key={m}>
           <circle cx={SOURCE.x} cy={SOURCE.y} r={m * SCALE} fill="none" stroke="var(--muted-foreground)" strokeOpacity=".35" strokeDasharray="4 6" />
           <text x={SOURCE.x + m * SCALE * 0.707 + 4} y={SOURCE.y - m * SCALE * 0.707} fontSize="11" fill="var(--muted-foreground)" fontFamily="var(--font-mono)">{m} m</text>

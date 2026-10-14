@@ -36,13 +36,18 @@ const riskBg = { safe: "bg-safe", warn: "bg-warn", danger: "bg-danger" };
 function Simulator() {
   const [procedure, setProcedure] = useState<ProcedureId>("ortho");
   const [minutes, setMinutes] = useState(2);
-  const [apron, setApron] = useState<ApronId>("none");
-  const [thyroidGlasses, setTG] = useState(false);
+  const allIds = Object.keys(PROFESSIONALS) as ProfessionalId[];
+  const [aprons, setAprons] = useState<Record<ProfessionalId, ApronId>>(() => Object.fromEntries(allIds.map((i) => [i, "none"])) as Record<ProfessionalId, ApronId>);
+  const [tgs, setTgs] = useState<Record<ProfessionalId, boolean>>(() => Object.fromEntries(allIds.map((i) => [i, false])) as Record<ProfessionalId, boolean>);
   const [positions, setPositions] = useState(initialPos);
   const [selected, setSelected] = useState<ProfessionalId>("tech");
   const [showIcrp, setShowIcrp] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const apron = aprons[selected];
+  const thyroidGlasses = tgs[selected];
+  const setApron = (a: ApronId) => setAprons((s) => ({ ...s, [selected]: a }));
+  const setTG = (v: boolean) => setTgs((s) => ({ ...s, [selected]: v }));
   const distance = distanceOf(positions[selected]);
   const setDistance = (m: number) =>
     setPositions((p) => ({ ...p, [selected]: placeAt(p[selected], m) }));
@@ -50,16 +55,16 @@ function Simulator() {
   const doses = useMemo(() => {
     const out = {} as Record<ProfessionalId, number>;
     (Object.keys(PROFESSIONALS) as ProfessionalId[]).forEach((id) => {
-      out[id] = computeDose({ procedure, minutes, apron, thyroidGlasses, distance: distanceOf(positions[id]) }).dose;
+      out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: distanceOf(positions[id]) }).dose;
     });
     return out;
-  }, [procedure, minutes, apron, thyroidGlasses, positions]);
+  }, [procedure, minutes, aprons, tgs, positions]);
 
   const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance });
   const level = riskLevel(result.dose);
 
   // Insight tracking: compare against last "committed" state
-  const prev = useRef({ distance, minutes, apron, thyroidGlasses, procedure, dose: result.dose });
+  const prev = useRef({ sel: selected, distance, minutes, apron, thyroidGlasses, procedure, dose: result.dose });
   const [insight, setInsight] = useState<string>("Ajuste os parâmetros ou arraste os profissionais para ver o impacto na dose.");
   useEffect(() => {
     const t = setTimeout(() => {
@@ -80,10 +85,10 @@ function Simulator() {
         msg = `O procedimento selecionado tem taxa de dose base de ${PROCEDURES[procedure].baseRate} mGy/min — a dose ${dir} ${pct.toFixed(0)}%.`;
       }
       if (msg) setInsight(msg);
-      prev.current = { distance, minutes, apron, thyroidGlasses, procedure, dose: d };
+      prev.current = { sel: selected, distance, minutes, apron, thyroidGlasses, procedure, dose: d };
     }, 450);
     return () => clearTimeout(t);
-  }, [distance, minutes, apron, thyroidGlasses, procedure, result.dose, result.attenuation]);
+  }, [distance, minutes, apron, thyroidGlasses, procedure, result.dose, result.attenuation, selected]);
 
   const save = () => {
     saveRecord({
@@ -113,7 +118,7 @@ function Simulator() {
             onSelect={setSelected}
             onMove={(id, p) => setPositions((s) => ({ ...s, [id]: p }))}
           />
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {(Object.keys(PROFESSIONALS) as ProfessionalId[]).map((id) => (
               <button
                 key={id}
@@ -121,6 +126,7 @@ function Simulator() {
                 className={`rounded-md border p-2 text-left text-xs transition ${id === selected ? "border-primary bg-accent" : "hover:bg-muted"}`}
               >
                 <div className="font-medium">{PROFESSIONALS[id].label}</div>
+                <div className="text-[10px] text-muted-foreground">{APRONS[aprons[id]].mmPb ? `${APRONS[aprons[id]].mmPb} mm Pb` : "Sem avental"}{tgs[id] ? " + tiroide" : ""}</div>
                 <div className={`font-mono ${riskText[riskLevel(doses[id])]}`}>{fmt(doses[id])} µSv</div>
               </button>
             ))}
@@ -173,7 +179,7 @@ function Simulator() {
             <Field icon={Ruler} label={`Distância à fonte (${PROFESSIONALS[selected].short})`} value={`${distance.toFixed(2)} m`}>
               <input type="range" min={0.5} max={3} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
             </Field>
-            <Field icon={Shield} label="Blindagem / EPIs">
+            <Field icon={Shield} label={`Blindagem / EPIs (${PROFESSIONALS[selected].short})`}>
               <div className="grid gap-2">
                 {(Object.keys(APRONS) as ApronId[]).map((k) => (
                   <label key={k} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${apron === k ? "border-primary bg-accent" : ""}`}>

@@ -1,4 +1,4 @@
-export type ProcedureId = "ortho" | "cardio" | "vascular";
+export type ProcedureId = "ortho" | "cardio" | "vascular" | "urs" | "pain" | "implantofix";
 export type ApronId = "none" | "pb025" | "pb05";
 export type ProfessionalId = "tech" | "surgeon" | "anesthetist" | "nurse";
 
@@ -6,6 +6,9 @@ export const PROCEDURES: Record<ProcedureId, { label: string; baseRate: number }
   ortho: { label: "Ortopedia (Enclavamento Intramedular de Fémur)", baseRate: 8 },
   cardio: { label: "Cardiologia (Angiografia / Cateterismo)", baseRate: 15 },
   vascular: { label: "Cirurgia Vascular (Implantes de Stent)", baseRate: 12 },
+  urs: { label: "Ureterorenoscopia Retrógrada (URS)", baseRate: 4 },
+  pain: { label: "Medicina da Dor (Bloqueios Epidurais / Ramos Mediais)", baseRate: 3 },
+  implantofix: { label: "Implantofix (Cateter Venoso Central)", baseRate: 2 },
 };
 
 export const APRONS: Record<ApronId, { label: string; mmPb: number }> = {

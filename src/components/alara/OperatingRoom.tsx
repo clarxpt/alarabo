@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import { PROFESSIONALS, type ProfessionalId, riskLevel } from "@/lib/alara/physics";
 
-const W = 600, H = 460, SCALE = 100; // 100 px = 1 m
-export const SOURCE = { x: 300, y: 230 };
+const W = 640, H = 640, SCALE = 60; // 60 px = 1 m — room radius 5 m
+export const SOURCE = { x: 320, y: 320 };
 
 export interface Pos { x: number; y: number }
 
@@ -39,7 +39,7 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
     p = { x: Math.min(W - 20, Math.max(20, p.x)), y: Math.min(H - 20, Math.max(20, p.y)) };
     const d = distanceOf(p);
     if (d < 0.5) p = placeAt(p, 0.5);
-    if (d > 3) p = placeAt(p, 3);
+    if (d > 5) p = placeAt(p, 5);
     onMove(drag.current, p);
   };
 
@@ -66,24 +66,26 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
         </radialGradient>
       </defs>
       <rect width={W} height={H} fill="url(#grid)" />
-      <circle cx={SOURCE.x} cy={SOURCE.y} r={300} fill="url(#heat)" className="animate-beam" />
-      {[0.5, 1, 2, 3].map((m) => (
+      <circle cx={SOURCE.x} cy={SOURCE.y} r={5 * SCALE} fill="url(#heat)" className="animate-beam" />
+      {[1, 2, 3, 4, 5].map((m) => (
         <g key={m}>
           <circle cx={SOURCE.x} cy={SOURCE.y} r={m * SCALE} fill="none" stroke="var(--muted-foreground)" strokeOpacity=".35" strokeDasharray="4 6" />
           <text x={SOURCE.x + m * SCALE * 0.707 + 4} y={SOURCE.y - m * SCALE * 0.707} fontSize="11" fill="var(--muted-foreground)" fontFamily="var(--font-mono)">{m} m</text>
         </g>
       ))}
-      {/* table + patient */}
-      <rect x={180} y={205} width={240} height={50} rx={8} fill="var(--card)" stroke="var(--navy)" strokeWidth="2" />
-      <ellipse cx={200} cy={230} rx={14} ry={12} fill="var(--accent)" stroke="var(--navy)" />
-      <rect x={215} y={218} width={180} height={24} rx={10} fill="var(--accent)" stroke="var(--navy)" />
-      {/* C-arm */}
-      <path d={`M ${SOURCE.x - 45} 150 A 80 80 0 0 0 ${SOURCE.x - 45} 310`} fill="none" stroke="var(--navy)" strokeWidth="10" strokeLinecap="round" />
-      <rect x={SOURCE.x - 14} y={142} width={28} height={18} rx={3} fill="var(--navy)" />
-      <rect x={SOURCE.x - 18} y={300} width={36} height={16} rx={3} fill="var(--navy)" />
-      <polygon points={`${SOURCE.x - 12},300 ${SOURCE.x + 12},300 ${SOURCE.x + 22},160 ${SOURCE.x - 22},160`} fill="var(--beam)" opacity=".35" className="animate-beam" />
+      {/* table + patient (2.4 m × 0.5 m) */}
+      <rect x={SOURCE.x - 1.2 * SCALE} y={SOURCE.y - 0.25 * SCALE} width={2.4 * SCALE} height={0.5 * SCALE} rx={8} fill="var(--card)" stroke="var(--navy)" strokeWidth="2" />
+      <ellipse cx={SOURCE.x - SCALE} cy={SOURCE.y} rx={0.14 * SCALE} ry={0.12 * SCALE} fill="var(--accent)" stroke="var(--navy)" />
+      <rect x={SOURCE.x - 0.85 * SCALE} y={SOURCE.y - 0.12 * SCALE} width={1.8 * SCALE} height={0.24 * SCALE} rx={10} fill="var(--accent)" stroke="var(--navy)" />
+      {/* C-arm: detector above, tube (ampola) below */}
+      <path d={`M ${SOURCE.x - 0.45 * SCALE} ${SOURCE.y - 0.8 * SCALE} A ${0.8 * SCALE} ${0.8 * SCALE} 0 0 0 ${SOURCE.x - 0.45 * SCALE} ${SOURCE.y + 0.8 * SCALE}`} fill="none" stroke="var(--navy)" strokeWidth="10" strokeLinecap="round" />
+      <rect x={SOURCE.x - 0.14 * SCALE} y={SOURCE.y - 0.88 * SCALE} width={0.28 * SCALE} height={0.18 * SCALE} rx={3} fill="var(--navy)" />
+      <rect x={SOURCE.x - 0.18 * SCALE} y={SOURCE.y + 0.7 * SCALE} width={0.36 * SCALE} height={0.16 * SCALE} rx={3} fill="var(--navy)" />
+      <polygon points={`${SOURCE.x - 0.12 * SCALE},${SOURCE.y + 0.7 * SCALE} ${SOURCE.x + 0.12 * SCALE},${SOURCE.y + 0.7 * SCALE} ${SOURCE.x + 0.22 * SCALE},${SOURCE.y - 0.7 * SCALE} ${SOURCE.x - 0.22 * SCALE},${SOURCE.y - 0.7 * SCALE}`} fill="var(--beam)" opacity=".35" className="animate-beam" />
       <circle cx={SOURCE.x} cy={SOURCE.y} r={5} fill="var(--danger)" />
-      <text x={SOURCE.x - 60} y={340} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">ARCO EM C</text>
+      <text x={SOURCE.x + 0.25 * SCALE} y={SOURCE.y + 0.82 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">AMPOLA</text>
+      <text x={SOURCE.x + 0.25 * SCALE} y={SOURCE.y - 0.74 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">DETETOR</text>
+      <text x={SOURCE.x - 0.6 * SCALE} y={SOURCE.y + 1.1 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">ARCO EM C</text>
 
       {(Object.keys(PROFESSIONALS) as ProfessionalId[]).map((id) => {
         const p = positions[id];

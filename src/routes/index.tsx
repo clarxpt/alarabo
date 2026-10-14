@@ -4,7 +4,7 @@ import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check } f
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
-  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, computeDose, fmt, riskLevel,
+  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
 import { saveRecord } from "@/lib/alara/history";
@@ -24,10 +24,10 @@ export const Route = createFileRoute("/")({
 });
 
 const initialPos: Record<ProfessionalId, Pos> = {
-  tech: { x: SOURCE.x - 150, y: SOURCE.y + 130 },
-  surgeon: { x: SOURCE.x, y: SOURCE.y + 100 },
-  anesthetist: { x: SOURCE.x - 200, y: SOURCE.y - 70 },
-  nurse: { x: SOURCE.x + 150, y: SOURCE.y - 130 },
+  tech: { x: SOURCE.x - 90, y: SOURCE.y + 78 },
+  surgeon: { x: SOURCE.x, y: SOURCE.y + 60 },
+  anesthetist: { x: SOURCE.x - 120, y: SOURCE.y - 42 },
+  nurse: { x: SOURCE.x + 90, y: SOURCE.y - 78 },
 };
 
 const riskText = { safe: "text-safe", warn: "text-warn", danger: "text-danger" };
@@ -55,12 +55,15 @@ function Simulator() {
   const doses = useMemo(() => {
     const out = {} as Record<ProfessionalId, number>;
     (Object.keys(PROFESSIONALS) as ProfessionalId[]).forEach((id) => {
-      out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: distanceOf(positions[id]) }).dose;
+      const d = distanceOf(positions[id]);
+      const side = sideZone(positions[id].y - SOURCE.y, d);
+      out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: d, side }).dose;
     });
     return out;
   }, [procedure, minutes, aprons, tgs, positions]);
 
-  const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance });
+  const side = sideZone(positions[selected].y - SOURCE.y, distance);
+  const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance, side });
   const level = riskLevel(result.dose);
 
   // Insight tracking: compare against last "committed" state
@@ -148,6 +151,11 @@ function Simulator() {
               <span>0</span><span>5</span><span>20</span><span>40+ µSv</span>
             </div>
             <div className={`mt-3 text-sm font-medium ${riskText[level]}`}>● {RISK_LABEL[level]}</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Posição: <span className="font-medium text-foreground">{SIDE_LABEL[side]}</span>
+              {side === "tube" && " — a dispersão é ~1,5× maior do lado da ampola."}
+              {side === "detector" && " — a dispersão é ~40% menor do lado do detetor."}
+            </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               <Stat label="Taxa a 1 m" value={`${fmt(result.baseRate, 1)} µSv/min`} />
               <Stat label="Sem blindagem" value={`${fmt(result.unshielded, 1)} µSv`} />
@@ -178,7 +186,7 @@ function Simulator() {
               <input type="range" min={0.1} max={10} step={0.1} value={minutes} onChange={(e) => setMinutes(+e.target.value)} className="w-full" />
             </Field>
             <Field icon={Ruler} label={`Distância à fonte (${PROFESSIONALS[selected].short})`} value={`${distance.toFixed(2)} m`}>
-              <input type="range" min={0.5} max={3} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
+              <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
             </Field>
             <Field icon={Shield} label={`Blindagem / EPIs (${PROFESSIONALS[selected].short})`}>
               <div className="grid gap-2">

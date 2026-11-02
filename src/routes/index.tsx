@@ -32,9 +32,11 @@ const initialPos: Record<ProfessionalId, Pos> = {
 
 const riskText = { safe: "text-safe", warn: "text-warn", danger: "text-danger" };
 const riskBg = { safe: "bg-safe", warn: "bg-warn", danger: "bg-danger" };
+const CHEST_XRAY_USV = 20;
+const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 function Simulator() {
-  const [procedure, setProcedure] = useState<ProcedureId>("ortho");
+  const [procedure, setProcedure] = useState<ProcedureId>("pain");
   const [minutes, setMinutes] = useState(2);
   const allIds = Object.keys(PROFESSIONALS) as ProfessionalId[];
   const [aprons, setAprons] = useState<Record<ProfessionalId, ApronId>>(() => Object.fromEntries(allIds.map((i) => [i, "none"])) as Record<ProfessionalId, ApronId>);
@@ -163,7 +165,7 @@ function Simulator() {
             </div>
             <div className="mt-4 flex gap-2">
               <button onClick={() => setShowIcrp(true)} className="flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
-                <Scale className="h-4 w-4" /> Comparar com limites ICRP
+                <Scale className="h-4 w-4" /> Comparações e Equivalências
               </button>
               <button onClick={save} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:opacity-90">
                 {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />} {saved ? "Guardado" : "Registar"}
@@ -212,19 +214,26 @@ function Simulator() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 p-4 animate-in fade-in" onClick={() => setShowIcrp(false)}>
           <div className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Comparação com limites ICRP</h2>
+              <h2 className="font-semibold">Comparações e Equivalências</h2>
               <button onClick={() => setShowIcrp(false)} aria-label="Fechar"><X className="h-4 w-4" /></button>
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">Limite anual de dose efetiva para profissionais expostos: <b className="text-foreground">20 mSv/ano</b> (média em 5 anos, ICRP 103).</p>
-            <div className="mt-4 space-y-2 text-sm">
-              <Row k="Dose desta simulação" v={`${fmt(result.dose)} µSv`} />
-              <Row k="Fração do limite anual" v={`${((result.dose / ICRP_ANNUAL_USV) * 100).toFixed(3)}%`} />
-              <Row k="Procedimentos até ao limite" v={Number.isFinite(procsPerYear) ? Math.floor(procsPerYear).toLocaleString("pt-PT") : "∞"} />
+            <p className="mt-2 text-sm text-muted-foreground">Dose desta simulação ({PROFESSIONALS[selected].label}): <b className="font-mono text-foreground">{fmt(result.dose)} µSv</b></p>
+            <div className="mt-4 space-y-4 text-sm">
+              <div>
+                <div className="font-medium">1. Limite anual ICRP (20 mSv/ano)</div>
+                <Row k="Fração do limite anual" v={`${((result.dose / ICRP_ANNUAL_USV) * 100).toFixed(3)}%`} />
+                <Row k="Procedimentos até ao limite" v={Number.isFinite(procsPerYear) ? Math.floor(procsPerYear).toLocaleString("pt-PT") : "∞"} />
+              </div>
+              <div>
+                <div className="font-medium">2. Raio-X de Tórax (PA ≈ 20 µSv)</div>
+                <Row k="Equivalente a" v={`${fmt(result.dose / CHEST_XRAY_USV)} raios-X`} />
+              </div>
+              <div>
+                <div className="font-medium">3. Radiação natural em Portugal (≈ 3 mSv/ano)</div>
+                <Row k="Equivalente a" v={`${fmt(result.dose / PT_BACKGROUND_USV_DAY)} dias`} />
+              </div>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-              <div className={`h-full ${riskBg[level]}`} style={{ width: `${Math.max(1, Math.min(100, (result.dose / ICRP_ANNUAL_USV) * 100 * 250))}%` }} />
-            </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">Barra ampliada 250× (equivalente a ~250 procedimentos/ano).</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência aproximados: raio-X tórax PA 0,02 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
           </div>
         </div>
       )}

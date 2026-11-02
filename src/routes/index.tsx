@@ -4,7 +4,8 @@ import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check } f
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
-  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
+  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
+  SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
 import { saveRecord } from "@/lib/alara/history";
@@ -32,8 +33,6 @@ const initialPos: Record<ProfessionalId, Pos> = {
 
 const riskText = { safe: "text-safe", warn: "text-warn", danger: "text-danger" };
 const riskBg = { safe: "bg-safe", warn: "bg-warn", danger: "bg-danger" };
-const CHEST_XRAY_USV = 100;
-const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 function Simulator() {
   const [procedure, setProcedure] = useState<ProcedureId>("pain");

@@ -8,8 +8,8 @@ describe("Reference values for comparisons", () => {
     expect(ICRP_ANNUAL_USV).toBe(20000);
   });
 
-  it("uses 0,1 mSv for a chest X-ray PA", () => {
-    expect(CHEST_XRAY_USV).toBe(100);
+  it("uses 0,02 mSv for a chest X-ray PA", () => {
+    expect(CHEST_XRAY_USV).toBe(20);
   });
 
   it("uses ~3 mSv/year of natural background in Portugal", () => {

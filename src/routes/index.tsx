@@ -219,16 +219,16 @@ function Simulator() {
             <p className="mt-2 text-sm text-muted-foreground">Dose desta simulação ({PROFESSIONALS[selected].label}): <b className="font-mono text-foreground">{fmt(result.dose)} µSv</b></p>
             <div className="mt-4 space-y-4 text-sm">
               <div>
-                <div className="font-medium">1. Limite anual Trabalhadores Expostos (Dec. Lei n.º 108/2018 — 20 mSv/ano)</div>
+                <div className="font-medium">1. Limite anual Trabalhadores Expostos</div>
                 <Row k="Fração do limite anual" v={`${((result.dose / ICRP_ANNUAL_USV) * 100).toFixed(3)}%`} />
                 <Row k="Procedimentos até ao limite" v={Number.isFinite(procsPerYear) ? Math.floor(procsPerYear).toLocaleString("pt-PT") : "∞"} />
               </div>
               <div>
-                <div className="font-medium">2. Raio-X de Tórax PA (≈ 0,1 mSv)</div>
+                <div className="font-medium">2. Raio-X de Tórax PA</div>
                 <Row k="Equivalente a" v={`${fmt(result.dose / CHEST_XRAY_USV)} raios-X`} />
               </div>
               <div>
-                <div className="font-medium">3. Radiação natural em Portugal (≈ 3 mSv/ano)</div>
+                <div className="font-medium">3. Radiação natural em Portugal</div>
                 <Row k="Equivalente a" v={`${fmt(result.dose / PT_BACKGROUND_USV_DAY)} dias`} />
               </div>
             </div>

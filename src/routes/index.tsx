@@ -8,7 +8,7 @@ import {
   SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
-import { saveRecord } from "@/lib/alara/history";
+import { saveRecord, loadHistory, type SessionRecord } from "@/lib/alara/history";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +44,8 @@ function Simulator() {
   const [selected, setSelected] = useState<ProfessionalId>("tech");
   const [showIcrp, setShowIcrp] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [history, setHistory] = useState<SessionRecord[]>([]);
+  useEffect(() => { setHistory(loadHistory()); }, []);
 
   const apron = aprons[selected];
   const thyroidGlasses = tgs[selected];
@@ -100,9 +102,19 @@ function Simulator() {
       id: crypto.randomUUID(), at: new Date().toISOString(), professional: PROFESSIONALS[selected].label,
       procedure, minutes, apron, thyroidGlasses, distance, dose: result.dose,
     });
+    setHistory(loadHistory());
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };
+
+  const year = new Date().getFullYear();
+  const yearRecords = history.filter((r) => r.professional === PROFESSIONALS[selected].label && new Date(r.at).getFullYear() === year);
+  const accumulated = yearRecords.reduce((a, r) => a + r.dose, 0);
+  const accPct = Math.min(100, (accumulated / ICRP_ANNUAL_USV) * 100);
+  const nextPct = Math.min(100 - accPct, (result.dose / ICRP_ANNUAL_USV) * 100);
+  const remaining = Math.max(0, ICRP_ANNUAL_USV - accumulated);
+  const sessionsLeft = result.dose > 0 ? Math.floor(remaining / result.dose) : Infinity;
+  const budgetColor = accPct >= 75 ? "bg-danger" : accPct >= 30 ? "bg-warn" : "bg-safe";
 
   const gaugePct = Math.min(100, (result.dose / 40) * 100);
   const procsPerYear = result.dose > 0 ? ICRP_ANNUAL_USV / result.dose : Infinity;
@@ -170,6 +182,26 @@ function Simulator() {
                 {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />} {saved ? "Guardado" : "Registar"}
               </button>
             </div>
+          </div>
+
+          <div className="panel p-5">
+            <div className="flex items-baseline justify-between">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Orçamento anual {year} · {PROFESSIONALS[selected].label}</div>
+              <div className="font-mono text-xs text-muted-foreground">{yearRecords.length} sessões</div>
+            </div>
+            <div className="mt-2 flex items-end gap-2">
+              <span className="font-mono text-2xl font-semibold">{fmt(accumulated / 1000, 3)}</span>
+              <span className="mb-0.5 text-sm text-muted-foreground">/ 20 mSv</span>
+              <span className="mb-0.5 ml-auto font-mono text-sm">{accPct.toFixed(2)}%</span>
+            </div>
+            <div className="mt-2 flex h-4 overflow-hidden rounded-full bg-muted">
+              <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
+              <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Zona clara = esta simulação (+{fmt(result.dose)} µSv). Restam {fmt(remaining / 1000, 2)} mSv —
+              {" "}{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} sessões iguais` : "sem limite com estes parâmetros"} até ao limite (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
+            </p>
           </div>
 
           <div className="panel flex gap-3 p-4">

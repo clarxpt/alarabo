@@ -4,7 +4,8 @@ import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check } f
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
-  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
+  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
+  SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
 import { saveRecord } from "@/lib/alara/history";
@@ -32,8 +33,6 @@ const initialPos: Record<ProfessionalId, Pos> = {
 
 const riskText = { safe: "text-safe", warn: "text-warn", danger: "text-danger" };
 const riskBg = { safe: "bg-safe", warn: "bg-warn", danger: "bg-danger" };
-const CHEST_XRAY_USV = 20;
-const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 function Simulator() {
   const [procedure, setProcedure] = useState<ProcedureId>("pain");
@@ -220,12 +219,12 @@ function Simulator() {
             <p className="mt-2 text-sm text-muted-foreground">Dose desta simulação ({PROFESSIONALS[selected].label}): <b className="font-mono text-foreground">{fmt(result.dose)} µSv</b></p>
             <div className="mt-4 space-y-4 text-sm">
               <div>
-                <div className="font-medium">1. Limite anual ICRP (20 mSv/ano)</div>
+                <div className="font-medium">1. Limite anual Trabalhadores Expostos (Dec. Lei n.º 108/2018 — 20 mSv/ano)</div>
                 <Row k="Fração do limite anual" v={`${((result.dose / ICRP_ANNUAL_USV) * 100).toFixed(3)}%`} />
                 <Row k="Procedimentos até ao limite" v={Number.isFinite(procsPerYear) ? Math.floor(procsPerYear).toLocaleString("pt-PT") : "∞"} />
               </div>
               <div>
-                <div className="font-medium">2. Raio-X de Tórax (PA ≈ 20 µSv)</div>
+                <div className="font-medium">2. Raio-X de Tórax PA (≈ 0,1 mSv)</div>
                 <Row k="Equivalente a" v={`${fmt(result.dose / CHEST_XRAY_USV)} raios-X`} />
               </div>
               <div>
@@ -233,7 +232,7 @@ function Simulator() {
                 <Row k="Equivalente a" v={`${fmt(result.dose / PT_BACKGROUND_USV_DAY)} dias`} />
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência aproximados: raio-X tórax PA 0,02 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência: limite anual de 20 mSv para Trabalhadores Expostos (Dec. Lei n.º 108/2018); raio-X tórax PA ≈ 0,1 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
           </div>
         </div>
       )}

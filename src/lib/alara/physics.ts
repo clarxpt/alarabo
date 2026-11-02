@@ -30,7 +30,12 @@ export const MU_PB = 8;
 export const SCATTER_FACTOR_USV = 1; // 1 mGy/min source → 1 µSv/min scatter at 1 m (educational model)
 export const D_REF = 1.0;
 export const THYROID_GLASSES_FACTOR = 0.75;
+/** Limite anual de Trabalhadores Expostos: 20 mSv/ano (Dec. Lei n.º 108/2018). */
 export const ICRP_ANNUAL_USV = 20000;
+/** Raio-X de tórax PA ≈ 0,1 mSv = 100 µSv. */
+export const CHEST_XRAY_USV = 100;
+/** Fundo natural em Portugal ≈ 3 mSv/ano ≈ 8,2 µSv/dia. */
+export const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 /** Scatter is higher on the X-ray tube (ampola) side and lower on the detector side. */
 export const TUBE_SIDE_FACTOR = 1.5;

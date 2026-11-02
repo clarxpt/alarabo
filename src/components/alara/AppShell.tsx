@@ -18,6 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div>
               <div className="font-mono text-lg font-semibold tracking-widest">ALARA</div>
               <div className="text-[11px] opacity-70">Proteção Radiológica no Bloco Operatório</div>
+              <div className="text-[10px] italic opacity-60">Ferramenta criada por Cláudio Filipe</div>
             </div>
           </div>
           <nav className="ml-auto flex gap-1">

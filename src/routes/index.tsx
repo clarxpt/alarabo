@@ -232,7 +232,7 @@ function Simulator() {
                 <Row k="Equivalente a" v={`${fmt(result.dose / PT_BACKGROUND_USV_DAY)} dias`} />
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência: limite anual de 20 mSv para Trabalhadores Expostos (Dec. Lei n.º 108/2018); raio-X tórax PA ≈ 0,1 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência: limite anual de 20 mSv para Trabalhadores Expostos (Dec. Lei n.º 108/2018); raio-X tórax PA ≈ 0,02 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
           </div>
         </div>
       )}

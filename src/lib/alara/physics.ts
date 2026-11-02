@@ -32,8 +32,8 @@ export const D_REF = 1.0;
 export const THYROID_GLASSES_FACTOR = 0.75;
 /** Limite anual de Trabalhadores Expostos: 20 mSv/ano (Dec. Lei n.º 108/2018). */
 export const ICRP_ANNUAL_USV = 20000;
-/** Raio-X de tórax PA ≈ 0,1 mSv = 100 µSv. */
-export const CHEST_XRAY_USV = 100;
+/** Raio-X de tórax PA ≈ 0,02 mSv = 20 µSv. */
+export const CHEST_XRAY_USV = 20;
 /** Fundo natural em Portugal ≈ 3 mSv/ano ≈ 8,2 µSv/dia. */
 export const PT_BACKGROUND_USV_DAY = 3000 / 365;
 

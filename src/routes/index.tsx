@@ -139,7 +139,7 @@ function Simulator() {
 
   return (
     <AppShell>
-      <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+      <div className="grid gap-6 @4xl:grid-cols-[1.35fr_1fr]">
         <section className="panel p-4">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-base font-semibold">Planta do Bloco Operatório</h1>
@@ -165,7 +165,7 @@ function Simulator() {
               </label>
             ))}
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 @xl:grid-cols-4">
             {active.map((id) => (
               <button
                 key={id}

@@ -53,7 +53,7 @@ function Simulator() {
       if (a.includes(id)) {
         if (a.length === 1) return a;
         const next = a.filter((x) => x !== id);
-        if (id === selected) setSelected(next[0]);
+        if (id === selected) setSelected(next[0]!);
         return next;
       }
       return allIds.filter((x) => x === id || a.includes(x));

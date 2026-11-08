@@ -63,6 +63,33 @@ export const SIDE_LABEL: Record<SideZone, string> = {
   lateral: "Lateral",
 };
 
+/**
+ * C-arm angulation → operator scatter dose factor (relative to PA 0°/0°).
+ * Source: Kuon E. et al., "Identification of less-irradiating tube angulations
+ * in invasive cardiology", JACC 2004;44(7):1420-8 (doi:10.1016/j.jacc.2004.06.057).
+ * Measured operator dose rose 10.6× towards LAO 100°, 2.4× towards RAO 100°,
+ * and ~2.5× towards 30° cranial/caudal. Intermediate angles are linearly
+ * interpolated (educational simplification).
+ */
+export const LAO_100_FACTOR = 10.6;
+export const RAO_100_FACTOR = 2.4;
+export const CC_30_FACTOR = 2.5;
+export const MAX_OBLIQUE = 100;
+export const MAX_CC = 30;
+/** oblique: + LAO / − RAO (°); cc: + cranial / − caudal (°). */
+export function angulationFactor(oblique: number, cc: number): number {
+  const o = Math.max(-MAX_OBLIQUE, Math.min(MAX_OBLIQUE, oblique));
+  const c = Math.min(MAX_CC, Math.abs(cc));
+  const fo = 1 + ((o >= 0 ? LAO_100_FACTOR : RAO_100_FACTOR) - 1) * (Math.abs(o) / MAX_OBLIQUE);
+  const fc = 1 + (CC_30_FACTOR - 1) * (c / MAX_CC);
+  return fo * fc;
+}
+export function angulationLabel(oblique: number, cc: number): string {
+  const o = oblique === 0 ? "PA 0°" : `${oblique > 0 ? "LAO" : "RAO"} ${Math.abs(oblique)}°`;
+  const c = cc === 0 ? "" : ` · ${cc > 0 ? "CRA" : "CAU"} ${Math.abs(cc)}°`;
+  return o + c;
+}
+
 export interface DoseInput {
   procedure: ProcedureId;
   minutes: number;
@@ -70,6 +97,8 @@ export interface DoseInput {
   apron: ApronId;
   thyroidGlasses: boolean;
   side?: SideZone;
+  oblique?: number;
+  cc?: number;
 }
 
 export interface DoseResult {
@@ -83,7 +112,7 @@ export interface DoseResult {
 export function computeDose(i: DoseInput): DoseResult {
   const baseRate = PROCEDURES[i.procedure].baseRate * SCATTER_FACTOR_USV;
   const d = Math.max(0.1, i.distance);
-  const rateAtDistance = baseRate * (D_REF / d) ** 2 * sideFactor(i.side ?? "lateral");
+  const rateAtDistance = baseRate * (D_REF / d) ** 2 * sideFactor(i.side ?? "lateral") * angulationFactor(i.oblique ?? 0, i.cc ?? 0);
   const unshielded = rateAtDistance * i.minutes;
   let transmission = Math.exp(-MU_PB * APRONS[i.apron].mmPb);
   if (i.thyroidGlasses) transmission *= THYROID_GLASSES_FACTOR;

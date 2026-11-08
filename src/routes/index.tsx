@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check } from "lucide-react";
+import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check, RotateCw } from "lucide-react";
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
-  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
+  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, MAX_OBLIQUE, MAX_CC, angulationFactor, angulationLabel, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
   SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
@@ -44,6 +44,21 @@ function Simulator() {
   const [selected, setSelected] = useState<ProfessionalId>("tech");
   const [showIcrp, setShowIcrp] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [active, setActive] = useState<ProfessionalId[]>(allIds);
+  const [oblique, setOblique] = useState(0);
+  const [cc, setCc] = useState(0);
+  const [perShift, setPerShift] = useState(6);
+  const toggleActive = (id: ProfessionalId) => {
+    setActive((a) => {
+      if (a.includes(id)) {
+        if (a.length === 1) return a;
+        const next = a.filter((x) => x !== id);
+        if (id === selected) setSelected(next[0]!);
+        return next;
+      }
+      return allIds.filter((x) => x === id || a.includes(x));
+    });
+  };
   const [history, setHistory] = useState<SessionRecord[]>([]);
   useEffect(() => { setHistory(loadHistory()); }, []);
 
@@ -60,13 +75,13 @@ function Simulator() {
     (Object.keys(PROFESSIONALS) as ProfessionalId[]).forEach((id) => {
       const d = distanceOf(positions[id]);
       const side = sideZone(positions[id].y - SOURCE.y, d);
-      out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: d, side }).dose;
+      out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: d, side, oblique, cc }).dose;
     });
     return out;
-  }, [procedure, minutes, aprons, tgs, positions]);
+  }, [procedure, minutes, aprons, tgs, positions, oblique, cc]);
 
   const side = sideZone(positions[selected].y - SOURCE.y, distance);
-  const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance, side });
+  const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance, side, oblique, cc });
   const level = riskLevel(result.dose);
 
   // Insight tracking: compare against last "committed" state
@@ -114,6 +129,9 @@ function Simulator() {
   const nextPct = Math.min(100 - accPct, (result.dose / ICRP_ANNUAL_USV) * 100);
   const remaining = Math.max(0, ICRP_ANNUAL_USV - accumulated);
   const sessionsLeft = result.dose > 0 ? Math.floor(remaining / result.dose) : Infinity;
+  const shiftDose = result.dose * perShift;
+  const shiftPct = Math.min(100 - accPct, (shiftDose / ICRP_ANNUAL_USV) * 100);
+  const shiftsLeft = shiftDose > 0 ? Math.floor(remaining / shiftDose) : Infinity;
   const budgetColor = accPct >= 75 ? "bg-danger" : accPct >= 30 ? "bg-warn" : "bg-safe";
 
   const gaugePct = Math.min(100, (result.dose / 40) * 100);
@@ -134,9 +152,21 @@ function Simulator() {
             intensity={Math.min(1, (PROCEDURES[procedure].baseRate / 15) * Math.min(1, minutes / 4))}
             onSelect={setSelected}
             onMove={(id, p) => setPositions((s) => ({ ...s, [id]: p }))}
+            active={active}
+            oblique={oblique}
+            angleLabel={angulationLabel(oblique, cc)}
           />
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+            <span className="text-muted-foreground">Profissionais em sala:</span>
+            {allIds.map((id) => (
+              <label key={id} className="flex cursor-pointer items-center gap-1.5">
+                <input type="checkbox" className="accent-primary" checked={active.includes(id)} onChange={() => toggleActive(id)} />
+                {PROFESSIONALS[id].label}
+              </label>
+            ))}
+          </div>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {(Object.keys(PROFESSIONALS) as ProfessionalId[]).map((id) => (
+            {active.map((id) => (
               <button
                 key={id}
                 onClick={() => setSelected(id)}
@@ -194,13 +224,32 @@ function Simulator() {
               <span className="mb-0.5 text-sm text-muted-foreground">/ 20 mSv</span>
               <span className="mb-0.5 ml-auto font-mono text-sm">{accPct.toFixed(2)}%</span>
             </div>
-            <div className="mt-2 flex h-4 overflow-hidden rounded-full bg-muted">
-              <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
-              <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
+            <div className="mt-3 space-y-3">
+              <div>
+                <div className="mb-1 flex justify-between text-xs"><span className="font-medium">Esta simulação</span><span className="font-mono">+{fmt(result.dose)} µSv</span></div>
+                <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                  <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
+                  <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} procedimentos iguais` : "Sem limite"} até aos 20 mSv.</p>
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                  <label className="flex items-center gap-1.5 font-medium">Turno completo
+                    <input type="number" min={1} max={40} value={perShift} onChange={(e) => setPerShift(Math.max(1, Math.min(40, +e.target.value || 1)))} className="w-14 rounded border bg-card px-1.5 py-0.5 font-mono" />
+                    procedimentos
+                  </label>
+                  <span className="font-mono">+{fmt(shiftDose)} µSv</span>
+                </div>
+                <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                  <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
+                  <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(shiftPct, shiftDose > 0 ? 0.5 : 0)}%` }} />
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(shiftsLeft) ? `≈ ${shiftsLeft.toLocaleString("pt-PT")} turnos iguais` : "Sem limite"} até aos 20 mSv.</p>
+              </div>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Zona clara = esta simulação (+{fmt(result.dose)} µSv). Restam {fmt(remaining / 1000, 2)} mSv —
-              {" "}{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} sessões iguais` : "sem limite com estes parâmetros"} até ao limite (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
+              Restam {fmt(remaining / 1000, 2)} mSv (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
             </p>
           </div>
 
@@ -217,6 +266,13 @@ function Simulator() {
             </Field>
             <Field icon={Clock} label="Tempo de fluoroscopia" value={`${minutes.toFixed(1)} min`}>
               <input type="range" min={0.1} max={10} step={0.1} value={minutes} onChange={(e) => setMinutes(+e.target.value)} className="w-full" />
+            </Field>
+            <Field icon={RotateCw} label="Angulação do arco em C" value={`×${angulationFactor(oblique, cc).toFixed(2)}`}>
+              <div className="flex justify-between text-[11px] text-muted-foreground"><span>RAO {MAX_OBLIQUE}°</span><span className="font-mono text-foreground">{oblique === 0 ? "PA 0°" : `${oblique > 0 ? "LAO" : "RAO"} ${Math.abs(oblique)}°`}</span><span>LAO {MAX_OBLIQUE}°</span></div>
+              <input type="range" min={-MAX_OBLIQUE} max={MAX_OBLIQUE} step={10} value={oblique} onChange={(e) => setOblique(+e.target.value)} className="w-full" />
+              <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>Caudal {MAX_CC}°</span><span className="font-mono text-foreground">{cc === 0 ? "0°" : `${cc > 0 ? "Cranial" : "Caudal"} ${Math.abs(cc)}°`}</span><span>Cranial {MAX_CC}°</span></div>
+              <input type="range" min={-MAX_CC} max={MAX_CC} step={5} value={cc} onChange={(e) => setCc(+e.target.value)} className="w-full" />
+              <p className="mt-1 text-[11px] text-muted-foreground">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (valores intermédios interpolados).</p>
             </Field>
             <Field icon={Ruler} label={`Distância à fonte (${PROFESSIONALS[selected].short})`} value={`${distance.toFixed(2)} m`}>
               <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />

@@ -27,7 +27,7 @@ function Edu() {
     <AppShell>
       <h1 className="text-2xl font-semibold">Princípios ALARA</h1>
       <p className="mt-1 max-w-2xl text-muted-foreground">"As Low As Reasonably Achievable" — manter a exposição tão baixa quanto razoavelmente possível.</p>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-6 grid gap-4 @3xl:grid-cols-3">
         {items.map(({ icon: Icon, title, formula, text }) => (
           <article key={title} className="panel p-6">
             <Icon className="h-8 w-8 text-primary" />

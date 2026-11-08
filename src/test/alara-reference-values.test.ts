@@ -17,3 +17,12 @@ describe("Reference values for comparisons", () => {
     expect(PT_BACKGROUND_USV_DAY).toBeCloseTo(8.22, 1);
   });
 });
+
+import { angulationFactor } from "@/lib/alara/physics";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("C-arm angulation (Kuon 2004)", () => {
+  i2("PA 0° is baseline", () => e2(angulationFactor(0, 0)).toBe(1));
+  i2("LAO 100° = 10.6×", () => e2(angulationFactor(100, 0)).toBeCloseTo(10.6));
+  i2("RAO 100° = 2.4×", () => e2(angulationFactor(-100, 0)).toBeCloseTo(2.4));
+  i2("30° cranial/caudal = 2.5×", () => { e2(angulationFactor(0, 30)).toBeCloseTo(2.5); e2(angulationFactor(0, -30)).toBeCloseTo(2.5); });
+});

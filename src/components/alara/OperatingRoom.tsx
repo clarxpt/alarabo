@@ -13,6 +13,9 @@ interface Props {
   intensity: number; // 0..1
   onSelect: (id: ProfessionalId) => void;
   onMove: (id: ProfessionalId, p: Pos) => void;
+  active: ProfessionalId[];
+  oblique?: number;
+  angleLabel?: string;
 }
 
 export function distanceOf(p: Pos) {
@@ -25,7 +28,7 @@ export function placeAt(p: Pos, meters: number): Pos {
 
 const riskVar = { safe: "var(--safe)", warn: "var(--warn)", danger: "var(--danger)" };
 
-export function OperatingRoom({ positions, doses, selected, intensity, onSelect, onMove }: Props) {
+export function OperatingRoom({ positions, doses, selected, intensity, onSelect, onMove, active, oblique = 0, angleLabel }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<ProfessionalId | null>(null);
 
@@ -77,7 +80,9 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
       <rect x={SOURCE.x - 1.2 * SCALE} y={SOURCE.y - 0.25 * SCALE} width={2.4 * SCALE} height={0.5 * SCALE} rx={8} fill="var(--card)" stroke="var(--navy)" strokeWidth="2" />
       <ellipse cx={SOURCE.x - SCALE} cy={SOURCE.y} rx={0.14 * SCALE} ry={0.12 * SCALE} fill="var(--accent)" stroke="var(--navy)" />
       <rect x={SOURCE.x - 0.85 * SCALE} y={SOURCE.y - 0.12 * SCALE} width={1.8 * SCALE} height={0.24 * SCALE} rx={10} fill="var(--accent)" stroke="var(--navy)" />
-      {/* C-arm: detector above, tube (ampola) below */}
+      {angleLabel && <text x={12} y={22} fontSize="13" fontWeight="600" fill="var(--navy)" fontFamily="var(--font-mono)">C-arm: {angleLabel}</text>}
+      {/* C-arm: detector above, tube (ampola) below; rotated for LAO/RAO */}
+      <g transform={`rotate(${-oblique * 0.6} ${SOURCE.x} ${SOURCE.y})`}>
       <path d={`M ${SOURCE.x - 0.45 * SCALE} ${SOURCE.y - 0.8 * SCALE} A ${0.8 * SCALE} ${0.8 * SCALE} 0 0 0 ${SOURCE.x - 0.45 * SCALE} ${SOURCE.y + 0.8 * SCALE}`} fill="none" stroke="var(--navy)" strokeWidth="10" strokeLinecap="round" />
       <rect x={SOURCE.x - 0.14 * SCALE} y={SOURCE.y - 0.88 * SCALE} width={0.28 * SCALE} height={0.18 * SCALE} rx={3} fill="var(--navy)" />
       <rect x={SOURCE.x - 0.18 * SCALE} y={SOURCE.y + 0.7 * SCALE} width={0.36 * SCALE} height={0.16 * SCALE} rx={3} fill="var(--navy)" />
@@ -86,8 +91,9 @@ export function OperatingRoom({ positions, doses, selected, intensity, onSelect,
       <text x={SOURCE.x + 0.25 * SCALE} y={SOURCE.y + 0.82 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">AMPOLA</text>
       <text x={SOURCE.x + 0.25 * SCALE} y={SOURCE.y - 0.74 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">DETETOR</text>
       <text x={SOURCE.x - 0.6 * SCALE} y={SOURCE.y + 1.1 * SCALE} fontSize="11" fill="var(--navy)" fontFamily="var(--font-mono)">ARCO EM C</text>
+      </g>
 
-      {(Object.keys(PROFESSIONALS) as ProfessionalId[]).map((id) => {
+      {active.map((id) => {
         const p = positions[id];
         const sel = id === selected;
         const color = riskVar[riskLevel(doses[id])];

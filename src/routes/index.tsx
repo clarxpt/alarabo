@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check, RotateCw } from "lucide-react";
+import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check, RotateCw, ChevronDown } from "lucide-react";
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
@@ -48,6 +48,7 @@ function Simulator() {
   const [oblique, setOblique] = useState(0);
   const [cc, setCc] = useState(0);
   const [perShift, setPerShift] = useState(6);
+  const [budgetOpen, setBudgetOpen] = useState(false);
   const toggleActive = (id: ProfessionalId) => {
     setActive((a) => {
       if (a.includes(id)) {
@@ -274,7 +275,7 @@ function Simulator() {
               <input type="range" min={-MAX_CC} max={MAX_CC} step={5} value={cc} onChange={(e) => setCc(+e.target.value)} className="w-full" />
               <p className="mt-1 text-[11px] text-muted-foreground">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (valores intermédios interpolados).</p>
             </Field>
-            <Field icon={Ruler} label={`Distância à fonte (${PROFESSIONALS[selected].short})`} value={`${distance.toFixed(2)} m`}>
+            <Field icon={Ruler} label="Distância à fonte" value={`${distance.toFixed(2)} m`}>
               <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
             </Field>
             <Field icon={Shield} label={`Blindagem / EPIs (${PROFESSIONALS[selected].short})`}>

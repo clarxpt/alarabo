@@ -140,7 +140,7 @@ function Simulator() {
 
   return (
     <AppShell>
-      <div className="grid gap-6 @4xl:grid-cols-[1.35fr_1fr]">
+      <div className="grid items-start gap-4 @4xl:grid-cols-[1.1fr_1fr]">
         <section className="panel p-4">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-base font-semibold">Planta do Bloco Operatório</h1>
@@ -237,74 +237,74 @@ function Simulator() {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <div className="panel p-5">
+        <section className="space-y-4 @4xl:space-y-2">
+          <div className="panel p-5 @4xl:p-3">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Dose efetiva estimada · {PROFESSIONALS[selected].label}</div>
             <div className="mt-1 flex items-end gap-2">
-              <span className={`font-mono text-5xl font-semibold transition-colors ${riskText[level]}`}>{fmt(result.dose)}</span>
-              <span className="mb-1 text-lg text-muted-foreground">µSv</span>
+              <span className={`font-mono text-5xl font-semibold transition-colors @4xl:text-4xl ${riskText[level]}`}>{fmt(result.dose)}</span>
+              <span className="mb-1 text-lg text-muted-foreground @4xl:mb-0.5 @4xl:text-base">µSv</span>
             </div>
-            <div className="mt-4 h-3 overflow-hidden rounded-full bg-muted">
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-muted @4xl:mt-2 @4xl:h-2">
               <div className={`h-full rounded-full transition-all duration-500 ${riskBg[level]}`} style={{ width: `${gaugePct}%` }} />
             </div>
             <div className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
               <span>0</span><span>5</span><span>20</span><span>40+ µSv</span>
             </div>
-            <div className={`mt-3 text-sm font-medium ${riskText[level]}`}>● {RISK_LABEL[level]}</div>
-            <div className="mt-1 text-xs text-muted-foreground">
+            <div className={`mt-3 text-sm font-medium @4xl:mt-2 @4xl:text-xs ${riskText[level]}`}>● {RISK_LABEL[level]}</div>
+            <div className="mt-1 text-xs text-muted-foreground @4xl:text-[11px]">
               Posição: <span className="font-medium text-foreground">{SIDE_LABEL[side]}</span>
               {side === "tube" && " — a dispersão é ~1,5× maior do lado da ampola."}
               {side === "detector" && " — a dispersão é ~40% menor do lado do detetor."}
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs @4xl:mt-2">
               <Stat label="Taxa a 1 m" value={`${fmt(result.baseRate, 1)} µSv/min`} />
               <Stat label="Sem blindagem" value={`${fmt(result.unshielded, 1)} µSv`} />
               <Stat label="Atenuação" value={`${(result.attenuation * 100).toFixed(1)}%`} />
             </div>
-            <div className="mt-4">
-              <button onClick={() => setShowIcrp(true)} className="flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
+            <div className="mt-4 @4xl:mt-2">
+              <button onClick={() => setShowIcrp(true)} className="flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted @4xl:py-1.5 @4xl:text-xs">
                 <Scale className="h-4 w-4" /> Comparações e Equivalências
               </button>
             </div>
           </div>
 
-          <div className="panel flex gap-3 p-4">
-            <Lightbulb className="h-5 w-5 shrink-0 text-warn" />
-            <p key={insight} className="text-sm animate-in fade-in">{insight}</p>
+          <div className="panel flex gap-3 p-4 @4xl:gap-2 @4xl:p-2.5">
+            <Lightbulb className="h-5 w-5 shrink-0 text-warn @4xl:h-4 @4xl:w-4" />
+            <p key={insight} className="text-sm animate-in fade-in @4xl:text-xs">{insight}</p>
           </div>
 
-          <div className="panel space-y-5 p-5">
+          <div className="panel space-y-5 p-5 @4xl:space-y-2 @4xl:p-3">
             <Field icon={Stethoscope} label="Procedimento de referência">
-              <select value={procedure} onChange={(e) => setProcedure(e.target.value as ProcedureId)} className="w-full rounded-md border bg-card px-3 py-2 text-sm">
+              <select value={procedure} onChange={(e) => setProcedure(e.target.value as ProcedureId)} className="w-full rounded-md border bg-card px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs">
                 {Object.entries(PROCEDURES).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.baseRate} mGy/min</option>)}
               </select>
             </Field>
             <Field icon={Clock} label="Tempo de fluoroscopia" value={`${minutes.toFixed(1)} min`}>
-              <input type="range" min={0.1} max={10} step={0.1} value={minutes} onChange={(e) => setMinutes(+e.target.value)} className="w-full" />
+              <input type="range" min={0.1} max={10} step={0.1} value={minutes} onChange={(e) => setMinutes(+e.target.value)} className="w-full @4xl:h-3" />
             </Field>
             <Field icon={RotateCw} label="Angulação do arco em C" value={`×${angulationFactor(oblique, cc).toFixed(2)}`}>
-              <div className="flex justify-between text-[11px] text-muted-foreground"><span>RAO {MAX_OBLIQUE}°</span><span className="font-mono text-foreground">{oblique === 0 ? "PA 0°" : `${oblique > 0 ? "LAO" : "RAO"} ${Math.abs(oblique)}°`}</span><span>LAO {MAX_OBLIQUE}°</span></div>
-              <input type="range" min={-MAX_OBLIQUE} max={MAX_OBLIQUE} step={10} value={oblique} onChange={(e) => setOblique(+e.target.value)} className="w-full" />
-              <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>Caudal {MAX_CC}°</span><span className="font-mono text-foreground">{cc === 0 ? "0°" : `${cc > 0 ? "Cranial" : "Caudal"} ${Math.abs(cc)}°`}</span><span>Cranial {MAX_CC}°</span></div>
-              <input type="range" min={-MAX_CC} max={MAX_CC} step={5} value={cc} onChange={(e) => setCc(+e.target.value)} className="w-full" />
-              <p className="mt-1 text-[11px] text-muted-foreground">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (valores intermédios interpolados).</p>
+              <div className="flex justify-between text-[11px] text-muted-foreground @4xl:text-[10px]"><span>RAO {MAX_OBLIQUE}°</span><span className="font-mono text-foreground">{oblique === 0 ? "PA 0°" : `${oblique > 0 ? "LAO" : "RAO"} ${Math.abs(oblique)}°`}</span><span>LAO {MAX_OBLIQUE}°</span></div>
+              <input type="range" min={-MAX_OBLIQUE} max={MAX_OBLIQUE} step={10} value={oblique} onChange={(e) => setOblique(+e.target.value)} className="w-full @4xl:h-3" />
+              <div className="mt-1 flex justify-between text-[11px] text-muted-foreground @4xl:mt-0.5 @4xl:text-[10px]"><span>Caudal {MAX_CC}°</span><span className="font-mono text-foreground">{cc === 0 ? "0°" : `${cc > 0 ? "Cranial" : "Caudal"} ${Math.abs(cc)}°`}</span><span>Cranial {MAX_CC}°</span></div>
+              <input type="range" min={-MAX_CC} max={MAX_CC} step={5} value={cc} onChange={(e) => setCc(+e.target.value)} className="w-full @4xl:h-3" />
+              <p className="mt-1 text-[11px] text-muted-foreground @4xl:mt-0.5 @4xl:text-[10px] @4xl:leading-tight">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (valores intermédios interpolados).</p>
             </Field>
             <Field icon={Ruler} label="Distância à fonte" value={`${distance.toFixed(2)} m`}>
-              <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
+              <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full @4xl:h-3" />
             </Field>
             <Field icon={Shield} label="Blindagem / EPIs">
-              <div className="grid gap-2">
+              <div className="grid gap-2 @4xl:gap-1">
                 {(Object.keys(APRONS) as ApronId[]).map((k) => (
-                  <label key={k} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${apron === k ? "border-primary bg-accent" : ""}`}>
+                  <label key={k} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs ${apron === k ? "border-primary bg-accent" : ""}`}>
                     <input type="radio" checked={apron === k} onChange={() => setApron(k)} className="accent-primary" />
                     {APRONS[k].label}
-                    <span className="ml-auto font-mono text-xs text-muted-foreground">{((1 - Math.exp(-8 * APRONS[k].mmPb)) * 100).toFixed(0)}%</span>
+                    <span className="ml-auto font-mono text-xs text-muted-foreground @4xl:text-[10px]">{((1 - Math.exp(-8 * APRONS[k].mmPb)) * 100).toFixed(0)}%</span>
                   </label>
                 ))}
-                <label className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${thyroidGlasses ? "border-primary bg-accent" : ""}`}>
+                <label className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs ${thyroidGlasses ? "border-primary bg-accent" : ""}`}>
                   <input type="checkbox" checked={thyroidGlasses} onChange={(e) => setTG(e.target.checked)} className="accent-primary" />
                   Protetor de tiroide + óculos plumbo-vidro
-                  <span className="ml-auto font-mono text-xs text-muted-foreground">+25%</span>
+                  <span className="ml-auto font-mono text-xs text-muted-foreground @4xl:text-[10px]">+25%</span>
                 </label>
               </div>
             </Field>
@@ -345,8 +345,8 @@ function Simulator() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-muted p-2">
-      <div className="text-muted-foreground">{label}</div>
+    <div className="rounded-md bg-muted p-2 @4xl:p-1">
+      <div className="text-muted-foreground @4xl:text-[10px]">{label}</div>
       <div className="font-mono font-medium">{value}</div>
     </div>
   );
@@ -357,7 +357,7 @@ function Row({ k, v }: { k: string; v: string }) {
 function Field({ icon: Icon, label, value, children }: { icon: typeof Clock; label: string; value?: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+      <div className="mb-2 flex items-center gap-2 text-sm font-medium @4xl:mb-1 @4xl:text-[13px]">
         <Icon className="h-4 w-4 text-primary" /> {label}
         {value && <span className="ml-auto font-mono text-primary">{value}</span>}
       </div>

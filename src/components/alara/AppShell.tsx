@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className={`@container mx-auto ${width} px-3 py-4 sm:px-4 sm:py-6`}>{children}</main>
+      <main className={`@container mx-auto ${width} px-3 py-4 sm:px-4 sm:py-5`}>{children}</main>
     </div>
   );
 }

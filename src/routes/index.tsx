@@ -292,7 +292,7 @@ function Simulator() {
             <Field icon={Ruler} label="Distância à fonte" value={`${distance.toFixed(2)} m`}>
               <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full" />
             </Field>
-            <Field icon={Shield} label={`Blindagem / EPIs (${PROFESSIONALS[selected].short})`}>
+            <Field icon={Shield} label="Blindagem / EPIs">
               <div className="grid gap-2">
                 {(Object.keys(APRONS) as ApronId[]).map((k) => (
                   <label key={k} className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${apron === k ? "border-primary bg-accent" : ""}`}>

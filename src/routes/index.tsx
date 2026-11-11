@@ -268,45 +268,6 @@ function Simulator() {
             </div>
           </div>
 
-          <div className="panel p-5">
-            <div className="flex items-baseline justify-between">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Orçamento anual {year} · {PROFESSIONALS[selected].label}</div>
-              <div className="font-mono text-xs text-muted-foreground">{yearRecords.length} sessões</div>
-            </div>
-            <div className="mt-2 flex items-end gap-2">
-              <span className="font-mono text-2xl font-semibold">{fmt(accumulated / 1000, 3)}</span>
-              <span className="mb-0.5 text-sm text-muted-foreground">/ 20 mSv</span>
-              <span className="mb-0.5 ml-auto font-mono text-sm">{accPct.toFixed(2)}%</span>
-            </div>
-            <div className="mt-3 space-y-3">
-              <div>
-                <div className="mb-1 flex justify-between text-xs"><span className="font-medium">Esta simulação</span><span className="font-mono">+{fmt(result.dose)} µSv</span></div>
-                <div className="flex h-3 overflow-hidden rounded-full bg-muted">
-                  <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
-                  <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} procedimentos iguais` : "Sem limite"} até aos 20 mSv.</p>
-              </div>
-              <div>
-                <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-                  <label className="flex items-center gap-1.5 font-medium">Turno completo
-                    <input type="number" min={1} max={40} value={perShift} onChange={(e) => setPerShift(Math.max(1, Math.min(40, +e.target.value || 1)))} className="w-14 rounded border bg-card px-1.5 py-0.5 font-mono" />
-                    procedimentos
-                  </label>
-                  <span className="font-mono">+{fmt(shiftDose)} µSv</span>
-                </div>
-                <div className="flex h-3 overflow-hidden rounded-full bg-muted">
-                  <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
-                  <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(shiftPct, shiftDose > 0 ? 0.5 : 0)}%` }} />
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(shiftsLeft) ? `≈ ${shiftsLeft.toLocaleString("pt-PT")} turnos iguais` : "Sem limite"} até aos 20 mSv.</p>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Restam {fmt(remaining / 1000, 2)} mSv (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
-            </p>
-          </div>
-
           <div className="panel flex gap-3 p-4">
             <Lightbulb className="h-5 w-5 shrink-0 text-warn" />
             <p key={insight} className="text-sm animate-in fade-in">{insight}</p>

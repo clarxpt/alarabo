@@ -140,7 +140,7 @@ function Simulator() {
 
   return (
     <AppShell>
-      <div className="grid grid-cols-1 items-start gap-4 @4xl:grid-cols-[1.1fr_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-4 @4xl:grid-cols-[1.1fr_1fr]">
         <section className="panel min-w-0 p-4">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-base font-semibold">Planta do Bloco Operatório</h1>
@@ -237,7 +237,7 @@ function Simulator() {
           </div>
         </section>
 
-        <section className="min-w-0 space-y-4 @4xl:space-y-2">
+        <section className="flex min-w-0 flex-col gap-4 @4xl:gap-2">
           <div className="panel p-5 @4xl:p-3">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Dose efetiva estimada · {PROFESSIONALS[selected].label}</div>
             <div className="mt-1 flex items-end gap-2">
@@ -273,7 +273,7 @@ function Simulator() {
             <p key={insight} className="text-sm animate-in fade-in @4xl:text-xs">{insight}</p>
           </div>
 
-          <div className="panel space-y-5 p-5 @4xl:space-y-2 @4xl:p-3">
+          <div className="panel space-y-5 p-5 @4xl:flex @4xl:flex-1 @4xl:flex-col @4xl:justify-between @4xl:space-y-0 @4xl:p-3">
             <Field icon={Stethoscope} label="Procedimento de referência">
               <select value={procedure} onChange={(e) => setProcedure(e.target.value as ProcedureId)} className="w-full rounded-md border bg-card px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs">
                 {Object.entries(PROCEDURES).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.baseRate} mGy/min</option>)}

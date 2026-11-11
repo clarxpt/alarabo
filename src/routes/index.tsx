@@ -179,6 +179,62 @@ function Simulator() {
               </button>
             ))}
           </div>
+
+          <div className="panel mt-3 p-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBudgetOpen((v) => !v)}
+                aria-expanded={budgetOpen}
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left"
+              >
+                <ChevronDown className={`h-4 w-4 shrink-0 text-primary transition-transform duration-200 ${budgetOpen ? "" : "-rotate-90"}`} />
+                <span className="truncate text-xs font-semibold uppercase tracking-wider">Orçamento anual {year} · {PROFESSIONALS[selected].label}</span>
+              </button>
+              <button onClick={save} className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:opacity-90">
+                {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />} {saved ? "Guardado" : "Registar"}
+              </button>
+            </div>
+            {budgetOpen && (
+              <div className="mt-3 animate-in fade-in border-t pt-3">
+                <div className="flex items-baseline justify-between">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Acumulado este ano</div>
+                  <div className="font-mono text-xs text-muted-foreground">{yearRecords.length} sessões</div>
+                </div>
+                <div className="mt-1 flex items-end gap-2">
+                  <span className="font-mono text-2xl font-semibold">{fmt(accumulated / 1000, 3)}</span>
+                  <span className="mb-0.5 text-sm text-muted-foreground">/ 20 mSv</span>
+                  <span className="mb-0.5 ml-auto font-mono text-sm">{accPct.toFixed(2)}%</span>
+                </div>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <div className="mb-1 flex justify-between text-xs"><span className="font-medium">Esta simulação</span><span className="font-mono">+{fmt(result.dose)} µSv</span></div>
+                    <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
+                      <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} procedimentos iguais` : "Sem limite"} até aos 20 mSv.</p>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                      <label className="flex items-center gap-1.5 font-medium">Turno completo
+                        <input type="number" min={1} max={40} value={perShift} onChange={(e) => setPerShift(Math.max(1, Math.min(40, +e.target.value || 1)))} className="w-14 rounded border bg-card px-1.5 py-0.5 font-mono" />
+                        procedimentos
+                      </label>
+                      <span className="font-mono">+{fmt(shiftDose)} µSv</span>
+                    </div>
+                    <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
+                      <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(shiftPct, shiftDose > 0 ? 0.5 : 0)}%` }} />
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(shiftsLeft) ? `≈ ${shiftsLeft.toLocaleString("pt-PT")} turnos iguais` : "Sem limite"} até aos 20 mSv.</p>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Restam {fmt(remaining / 1000, 2)} mSv (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
+                </p>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="space-y-4">
@@ -205,12 +261,9 @@ function Simulator() {
               <Stat label="Sem blindagem" value={`${fmt(result.unshielded, 1)} µSv`} />
               <Stat label="Atenuação" value={`${(result.attenuation * 100).toFixed(1)}%`} />
             </div>
-            <div className="mt-4 flex gap-2">
-              <button onClick={() => setShowIcrp(true)} className="flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
+            <div className="mt-4">
+              <button onClick={() => setShowIcrp(true)} className="flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
                 <Scale className="h-4 w-4" /> Comparações e Equivalências
-              </button>
-              <button onClick={save} className="flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:opacity-90">
-                {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />} {saved ? "Guardado" : "Registar"}
               </button>
             </div>
           </div>

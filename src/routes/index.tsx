@@ -140,8 +140,8 @@ function Simulator() {
 
   return (
     <AppShell>
-      <div className="grid items-start gap-4 @4xl:grid-cols-[1.1fr_1fr]">
-        <section className="panel p-4">
+      <div className="grid grid-cols-1 items-start gap-4 @4xl:grid-cols-[1.1fr_1fr]">
+        <section className="panel min-w-0 p-4">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-base font-semibold">Planta do Bloco Operatório</h1>
             <span className="text-xs text-muted-foreground">Arraste os profissionais</span>
@@ -237,7 +237,7 @@ function Simulator() {
           </div>
         </section>
 
-        <section className="space-y-4 @4xl:space-y-2">
+        <section className="min-w-0 space-y-4 @4xl:space-y-2">
           <div className="panel p-5 @4xl:p-3">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Dose efetiva estimada · {PROFESSIONALS[selected].label}</div>
             <div className="mt-1 flex items-end gap-2">

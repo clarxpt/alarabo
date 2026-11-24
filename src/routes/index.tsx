@@ -4,7 +4,7 @@ import { Clock, Ruler, Shield, Stethoscope, Lightbulb, Scale, Save, X, Check, Ro
 import { AppShell } from "@/components/alara/AppShell";
 import { OperatingRoom, distanceOf, placeAt, SOURCE, type Pos } from "@/components/alara/OperatingRoom";
 import {
-  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, ICRP_ANNUAL_USV, MAX_OBLIQUE, MAX_CC, angulationFactor, angulationLabel, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
+  APRONS, PROCEDURES, PROFESSIONALS, RISK_LABEL, MAX_OBLIQUE, MAX_CC, angulationFactor, angulationLabel, CHEST_XRAY_USV, PT_BACKGROUND_USV_DAY,
   SIDE_LABEL, computeDose, fmt, riskLevel, sideZone,
   type ApronId, type ProcedureId, type ProfessionalId,
 } from "@/lib/alara/physics";
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "ALARA — Simulador de Proteção Radiológica no Bloco Operatório" },
-      { name: "description", content: "Simule tempo, distância e blindagem e veja a dose efetiva estimada em tempo real no bloco operatório." },
+      { name: "description", content: "Simule tempo, distância e blindagem e veja a exposição simulada em tempo real no bloco operatório." },
       { property: "og:title", content: "ALARA — Simulador de Proteção Radiológica" },
       { property: "og:description", content: "Simulador educativo de dose de radiação dispersa em fluoroscopia." },
       { property: "og:type", content: "website" },
@@ -75,13 +75,13 @@ function Simulator() {
     const out = {} as Record<ProfessionalId, number>;
     (Object.keys(PROFESSIONALS) as ProfessionalId[]).forEach((id) => {
       const d = distanceOf(positions[id]);
-      const side = sideZone(positions[id].y - SOURCE.y, d);
+      const side = sideZone(positions[id].x - SOURCE.x, positions[id].y - SOURCE.y, oblique);
       out[id] = computeDose({ procedure, minutes, apron: aprons[id], thyroidGlasses: tgs[id], distance: d, side, oblique, cc }).dose;
     });
     return out;
   }, [procedure, minutes, aprons, tgs, positions, oblique, cc]);
 
-  const side = sideZone(positions[selected].y - SOURCE.y, distance);
+  const side = sideZone(positions[selected].x - SOURCE.x, positions[selected].y - SOURCE.y, oblique);
   const result = computeDose({ procedure, minutes, apron, thyroidGlasses, distance, side, oblique, cc });
   const level = riskLevel(result.dose);
 
@@ -98,14 +98,14 @@ function Simulator() {
       const dir = d < p.dose ? "reduziu" : "aumentou";
       let msg = "";
       if (Math.abs(p.distance - distance) > 0.05) {
-        msg = `Mudar a distância de ${p.distance.toFixed(1)} m para ${distance.toFixed(1)} m ${dir} a sua dose em ${pct.toFixed(0)}% (lei do inverso do quadrado).`;
-        if (d < p.dose && pct > 85) msg += " Mais eficaz do que apenas mudar o avental!";
+        msg = `Mudar a distância de ${p.distance.toFixed(1)} m para ${distance.toFixed(1)} m ${dir} a sua dose em ${pct.toFixed(0)}% (modelo de distância e posição).`;
+
       } else if (p.minutes !== minutes) {
         msg = `Alterar o tempo de ${p.minutes.toFixed(1)} para ${minutes.toFixed(1)} min ${dir} a dose em ${pct.toFixed(0)}%. A dose é diretamente proporcional ao tempo.`;
       } else if (p.apron !== apron || p.thyroidGlasses !== thyroidGlasses) {
-        msg = `A alteração da blindagem ${dir} a dose em ${pct.toFixed(0)}%. Atenuação total atual: ${(result.attenuation * 100).toFixed(1)}%.`;
+        msg = `A alteração da blindagem ${dir} a dose em ${pct.toFixed(0)}%. Atenuação ilustrativa do avental: ${(result.attenuation * 100).toFixed(1)}%.`;
       } else if (p.procedure !== procedure) {
-        msg = `O procedimento selecionado tem taxa de dose base de ${PROCEDURES[procedure].baseRate} mGy/min — a dose ${dir} ${pct.toFixed(0)}%.`;
+        msg = `O procedimento selecionado tem taxa de dose base de ${PROCEDURES[procedure].baseRate} µSv/min (cenário ilustrativo) — a dose ${dir} ${pct.toFixed(0)}%.`;
       }
       if (msg) setInsight(msg);
       prev.current = { sel: selected, distance, minutes, apron, thyroidGlasses, procedure, dose: d };
@@ -114,29 +114,22 @@ function Simulator() {
   }, [distance, minutes, apron, thyroidGlasses, procedure, result.dose, result.attenuation, selected]);
 
   const save = () => {
-    saveRecord({
+    const stored = saveRecord({
       id: crypto.randomUUID(), at: new Date().toISOString(), professional: PROFESSIONALS[selected].label,
-      procedure, minutes, apron, thyroidGlasses, distance, dose: result.dose,
+      procedure, minutes, apron, thyroidGlasses, distance, side, oblique, cc, modelVersion: 2, dose: result.dose,
     });
+    if (!stored) { setInsight("Não foi possível guardar o cenário no navegador."); return; }
     setHistory(loadHistory());
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };
 
   const year = new Date().getFullYear();
-  const yearRecords = history.filter((r) => r.professional === PROFESSIONALS[selected].label && new Date(r.at).getFullYear() === year);
+  const yearRecords = history.filter((r) => r.modelVersion === 2 && r.professional === PROFESSIONALS[selected].label && new Date(r.at).getFullYear() === year);
   const accumulated = yearRecords.reduce((a, r) => a + r.dose, 0);
-  const accPct = Math.min(100, (accumulated / ICRP_ANNUAL_USV) * 100);
-  const nextPct = Math.min(100 - accPct, (result.dose / ICRP_ANNUAL_USV) * 100);
-  const remaining = Math.max(0, ICRP_ANNUAL_USV - accumulated);
-  const sessionsLeft = result.dose > 0 ? Math.floor(remaining / result.dose) : Infinity;
   const shiftDose = result.dose * perShift;
-  const shiftPct = Math.min(100 - accPct, (shiftDose / ICRP_ANNUAL_USV) * 100);
-  const shiftsLeft = shiftDose > 0 ? Math.floor(remaining / shiftDose) : Infinity;
-  const budgetColor = accPct >= 75 ? "bg-danger" : accPct >= 30 ? "bg-warn" : "bg-safe";
 
   const gaugePct = Math.min(100, (result.dose / 40) * 100);
-  const procsPerYear = result.dose > 0 ? ICRP_ANNUAL_USV / result.dose : Infinity;
 
   return (
     <AppShell>
@@ -188,7 +181,7 @@ function Simulator() {
                 className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left"
               >
                 <ChevronDown className={`h-4 w-4 shrink-0 text-primary transition-transform duration-200 ${budgetOpen ? "" : "-rotate-90"}`} />
-                <span className="truncate text-xs font-semibold uppercase tracking-wider">Orçamento anual {year} · {PROFESSIONALS[selected].label}</span>
+                <span className="truncate text-xs font-semibold uppercase tracking-wider">Cenários guardados {year} · {PROFESSIONALS[selected].label}</span>
               </button>
               <button onClick={save} className="flex shrink-0 items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:opacity-90">
                 {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />} {saved ? "Guardado" : "Registar"}
@@ -197,22 +190,17 @@ function Simulator() {
             {budgetOpen && (
               <div className="mt-3 animate-in fade-in border-t pt-3">
                 <div className="flex items-baseline justify-between">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Acumulado este ano</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">Soma de cenários guardados</div>
                   <div className="font-mono text-xs text-muted-foreground">{yearRecords.length} sessões</div>
                 </div>
                 <div className="mt-1 flex items-end gap-2">
                   <span className="font-mono text-2xl font-semibold">{fmt(accumulated / 1000, 3)}</span>
-                  <span className="mb-0.5 text-sm text-muted-foreground">/ 20 mSv</span>
-                  <span className="mb-0.5 ml-auto font-mono text-sm">{accPct.toFixed(2)}%</span>
+                  <span className="mb-0.5 text-sm text-muted-foreground">mSv simulados</span>
                 </div>
                 <div className="mt-3 space-y-3">
                   <div>
                     <div className="mb-1 flex justify-between text-xs"><span className="font-medium">Esta simulação</span><span className="font-mono">+{fmt(result.dose)} µSv</span></div>
-                    <div className="flex h-3 overflow-hidden rounded-full bg-muted">
-                      <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
-                      <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(nextPct, result.dose > 0 ? 0.5 : 0)}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(sessionsLeft) ? `≈ ${sessionsLeft.toLocaleString("pt-PT")} procedimentos iguais` : "Sem limite"} até aos 20 mSv.</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Comparação numérica ilustrativa, não dosimetria.</p>
                   </div>
                   <div>
                     <div className="mb-1 flex items-center justify-between gap-2 text-xs">
@@ -222,15 +210,11 @@ function Simulator() {
                       </label>
                       <span className="font-mono">+{fmt(shiftDose)} µSv</span>
                     </div>
-                    <div className="flex h-3 overflow-hidden rounded-full bg-muted">
-                      <div className={`h-full transition-all duration-500 ${budgetColor}`} style={{ width: `${accPct}%` }} />
-                      <div className={`h-full opacity-40 transition-all duration-500 ${budgetColor}`} style={{ width: `${Math.max(shiftPct, shiftDose > 0 ? 0.5 : 0)}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{Number.isFinite(shiftsLeft) ? `≈ ${shiftsLeft.toLocaleString("pt-PT")} turnos iguais` : "Sem limite"} até aos 20 mSv.</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Projeção hipotética, não autorização de exposição.</p>
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Restam {fmt(remaining / 1000, 2)} mSv (Dec. Lei n.º 108/2018). Use "Registar" para somar ao orçamento.
+                  20 mSv é um limite legal de dose efetiva, não um orçamento disponível. A soma de cenários não representa dose pessoal. Otimize sempre a exposição.
                 </p>
               </div>
             )}
@@ -239,7 +223,7 @@ function Simulator() {
 
         <section className="flex min-w-0 flex-col gap-4 @4xl:gap-2">
           <div className="panel p-5 @4xl:p-3">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Dose efetiva estimada · {PROFESSIONALS[selected].label}</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Exposição simulada · {PROFESSIONALS[selected].label}</div>
             <div className="mt-1 flex items-end gap-2">
               <span className={`font-mono text-5xl font-semibold transition-colors @4xl:text-4xl ${riskText[level]}`}>{fmt(result.dose)}</span>
               <span className="mb-1 text-lg text-muted-foreground @4xl:mb-0.5 @4xl:text-base">µSv</span>
@@ -253,17 +237,18 @@ function Simulator() {
             <div className={`mt-3 text-sm font-medium @4xl:mt-2 @4xl:text-xs ${riskText[level]}`}>● {RISK_LABEL[level]}</div>
             <div className="mt-1 text-xs text-muted-foreground @4xl:text-[11px]">
               Posição: <span className="font-medium text-foreground">{SIDE_LABEL[side]}</span>
-              {side === "tube" && " — a dispersão é ~1,5× maior do lado da ampola."}
-              {side === "detector" && " — a dispersão é ~40% menor do lado do detetor."}
+              {side === "tube" && " — fator ilustrativo de 1,5."}
+              {side === "detector" && " — fator ilustrativo de 0,6."}
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs @4xl:mt-2">
               <Stat label="Taxa a 1 m" value={`${fmt(result.baseRate, 1)} µSv/min`} />
               <Stat label="Sem blindagem" value={`${fmt(result.unshielded, 1)} µSv`} />
-              <Stat label="Atenuação" value={`${(result.attenuation * 100).toFixed(1)}%`} />
+              <Stat label="Atenuação do avental" value={`${(result.attenuation * 100).toFixed(1)}%`} />
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">Modelo pedagógico não calibrado; não representa dose efetiva ou pessoal. Cores e taxas são ilustrativas. Tiroide e óculos protegem órgãos específicos, sem redução global quantificada.</p>
             <div className="mt-4 @4xl:mt-2">
               <button onClick={() => setShowIcrp(true)} className="flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted @4xl:py-1.5 @4xl:text-xs">
-                <Scale className="h-4 w-4" /> Comparações e Equivalências
+                <Scale className="h-4 w-4" /> Referências educativas
               </button>
             </div>
           </div>
@@ -276,7 +261,7 @@ function Simulator() {
           <div className="panel space-y-5 p-5 @4xl:flex @4xl:flex-1 @4xl:flex-col @4xl:justify-between @4xl:space-y-0 @4xl:p-3">
             <Field icon={Stethoscope} label="Procedimento de referência">
               <select value={procedure} onChange={(e) => setProcedure(e.target.value as ProcedureId)} className="w-full rounded-md border bg-card px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs">
-                {Object.entries(PROCEDURES).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.baseRate} mGy/min</option>)}
+                {Object.entries(PROCEDURES).map(([k, v]) => <option key={k} value={k}>{v.label} — {v.baseRate} µSv/min (cenário ilustrativo)</option>)}
               </select>
             </Field>
             <Field icon={Clock} label="Tempo de fluoroscopia" value={`${minutes.toFixed(1)} min`}>
@@ -287,7 +272,7 @@ function Simulator() {
               <input type="range" min={-MAX_OBLIQUE} max={MAX_OBLIQUE} step={10} value={oblique} onChange={(e) => setOblique(+e.target.value)} className="w-full @4xl:h-3" />
               <div className="mt-1 flex justify-between text-[11px] text-muted-foreground @4xl:mt-0.5 @4xl:text-[10px]"><span>Caudal {MAX_CC}°</span><span className="font-mono text-foreground">{cc === 0 ? "0°" : `${cc > 0 ? "Cranial" : "Caudal"} ${Math.abs(cc)}°`}</span><span>Cranial {MAX_CC}°</span></div>
               <input type="range" min={-MAX_CC} max={MAX_CC} step={5} value={cc} onChange={(e) => setCc(+e.target.value)} className="w-full @4xl:h-3" />
-              <p className="mt-1 text-[11px] text-muted-foreground @4xl:mt-0.5 @4xl:text-[10px] @4xl:leading-tight">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (valores intermédios interpolados).</p>
+              <p className="mt-1 text-[11px] text-muted-foreground @4xl:mt-0.5 @4xl:text-[10px] @4xl:leading-tight">Fonte: Kuon et al., JACC 2004 — dose no operador ×10,6 em LAO 100°, ×2,4 em RAO 100°, ×2,5 a 30° crânio-caudal (estudo de cardiologia; interpolação e combinação ilustrativas, não validadas para outros procedimentos).</p>
             </Field>
             <Field icon={Ruler} label="Distância à fonte" value={`${distance.toFixed(2)} m`}>
               <input type="range" min={0.5} max={5} step={0.05} value={distance} onChange={(e) => setDistance(+e.target.value)} className="w-full @4xl:h-3" />
@@ -304,7 +289,7 @@ function Simulator() {
                 <label className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm @4xl:px-2 @4xl:py-1 @4xl:text-xs ${thyroidGlasses ? "border-primary bg-accent" : ""}`}>
                   <input type="checkbox" checked={thyroidGlasses} onChange={(e) => setTG(e.target.checked)} className="accent-primary" />
                   Protetor de tiroide + óculos plumbo-vidro
-                  <span className="ml-auto font-mono text-xs text-muted-foreground @4xl:text-[10px]">+25%</span>
+                  <span className="ml-auto font-mono text-xs text-muted-foreground @4xl:text-[10px]">Proteção localizada; não quantificada</span>
                 </label>
               </div>
             </Field>
@@ -316,26 +301,26 @@ function Simulator() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 p-4 animate-in fade-in" onClick={() => setShowIcrp(false)}>
           <div className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Comparações e Equivalências</h2>
+              <h2 className="font-semibold">Referências educativas</h2>
               <button onClick={() => setShowIcrp(false)} aria-label="Fechar"><X className="h-4 w-4" /></button>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">Dose desta simulação ({PROFESSIONALS[selected].label}): <b className="font-mono text-foreground">{fmt(result.dose)} µSv</b></p>
             <div className="mt-4 space-y-4 text-sm">
               <div>
                 <div className="font-medium">1. Limite anual Trabalhadores Expostos</div>
-                <Row k="Fração do limite anual" v={`${((result.dose / ICRP_ANNUAL_USV) * 100).toFixed(3)}%`} />
-                <Row k="Procedimentos até ao limite" v={Number.isFinite(procsPerYear) ? Math.floor(procsPerYear).toLocaleString("pt-PT") : "∞"} />
+                <Row k="Limite legal de dose efetiva" v="20 mSv/ano" />
+
               </div>
               <div>
                 <div className="font-medium">2. Raio-X de Tórax PA</div>
-                <Row k="Equivalente a" v={`${fmt(result.dose / CHEST_XRAY_USV)} raios-X`} />
+                <Row k="Valor típico ilustrativo" v={`${CHEST_XRAY_USV} µSv`} />
               </div>
               <div>
-                <div className="font-medium">3. Radiação natural em Portugal</div>
-                <Row k="Equivalente a" v={`${fmt(result.dose / PT_BACKGROUND_USV_DAY)} dias`} />
+                <div className="font-medium">3. Radiação natural (cenário ilustrativo)</div>
+                <Row k="Valor ilustrativo diário" v={`${fmt(PT_BACKGROUND_USV_DAY)} µSv/dia`} />
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência: limite anual de 20 mSv para Trabalhadores Expostos (Dec. Lei n.º 108/2018); raio-X tórax PA ≈ 0,02 mSv; fundo natural em Portugal ~3 mSv/ano (~8,2 µSv/dia).</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">Valores de referência: limite anual de 20 mSv para Trabalhadores Expostos (Dec. Lei n.º 108/2018); raio-X tórax PA ≈ 0,02 mSv; cenário ilustrativo de fundo natural de 3 mSv/ano (~8,2 µSv/dia). As grandezas não são necessariamente equivalentes; não interpretar como risco ou dose efetiva.</p>
           </div>
         </div>
       )}

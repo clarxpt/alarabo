@@ -24,17 +24,17 @@ export const PROFESSIONALS: Record<ProfessionalId, { label: string; short: strin
   nurse: { label: "Enfermeiro", short: "ENF" },
 };
 
-/** Linear attenuation coefficient of lead (~80 kVp scatter), per mm. */
+/** Illustrative effective attenuation coefficient, per mm; not a calibrated material constant. */
 export const MU_PB = 8;
-/** Fraction of source dose rate (mGy/min) reaching 1 m as scatter, converted to µSv. */
-export const SCATTER_FACTOR_USV = 1; // 1 mGy/min source → 1 µSv/min scatter at 1 m (educational model)
+/** Scenario rates are illustrative µSv/min at 1 m, not converted patient dose rates. */
+export const SCATTER_FACTOR_USV = 1;
 export const D_REF = 1.0;
-export const THYROID_GLASSES_FACTOR = 0.75;
+// Thyroid collars and glasses are recorded but not assigned a global dose reduction.
 /** Limite anual de Trabalhadores Expostos: 20 mSv/ano (Dec. Lei n.º 108/2018). */
 export const ICRP_ANNUAL_USV = 20000;
 /** Raio-X de tórax PA ≈ 0,02 mSv = 20 µSv. */
 export const CHEST_XRAY_USV = 20;
-/** Fundo natural em Portugal ≈ 3 mSv/ano ≈ 8,2 µSv/dia. */
+/** Illustrative natural-background scenario: 3 mSv/year, not a verified national average. */
 export const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 /** Scatter is higher on the X-ray tube (ampola) side and lower on the detector side. */
@@ -47,9 +47,10 @@ export type SideZone = "tube" | "detector" | "lateral";
  * Zone relative to the patient: dy > 0 is the tube side (below the table),
  * dy < 0 the detector side (above). Near-lateral positions use 1.0.
  */
-export function sideZone(dy: number, distance: number): SideZone {
-  const d = Math.max(0.1, distance);
-  const cos = dy / d; // 1 = fully on tube side, -1 = fully on detector side
+export function sideZone(dx: number, dy: number, oblique = 0): SideZone {
+  const d = Math.max(1e-9, Math.hypot(dx, dy));
+  const theta = -oblique * 0.6 * Math.PI / 180; // matches the schematic SVG rotation
+  const cos = (-dx * Math.sin(theta) + dy * Math.cos(theta)) / d; // 1 = fully on tube side, -1 = fully on detector side
   if (cos > 0.45) return "tube";
   if (cos < -0.45) return "detector";
   return "lateral";
@@ -67,8 +68,9 @@ export const SIDE_LABEL: Record<SideZone, string> = {
  * C-arm angulation → operator scatter dose factor (relative to PA 0°/0°).
  * Source: Kuon E. et al., "Identification of less-irradiating tube angulations
  * in invasive cardiology", JACC 2004;44(7):1420-8 (doi:10.1016/j.jacc.2004.06.057).
- * Measured operator dose rose 10.6× towards LAO 100°, 2.4× towards RAO 100°,
- * and ~2.5× towards 30° cranial/caudal. Intermediate angles are linearly
+ * The abstract reports mean operator ratios towards LAO 100° and RAO 100°
+ * across cranial/caudal projections, and ~2.5× towards 30° cranial/caudal
+ * across oblique projections; these are not isolated-axis calibrations. Intermediate angles are linearly
  * interpolated (educational simplification).
  */
 export const LAO_100_FACTOR = 10.6;
@@ -111,11 +113,11 @@ export interface DoseResult {
 
 export function computeDose(i: DoseInput): DoseResult {
   const baseRate = PROCEDURES[i.procedure].baseRate * SCATTER_FACTOR_USV;
-  const d = Math.max(0.1, i.distance);
+  if (!Number.isFinite(i.distance) || !Number.isFinite(i.minutes) || i.distance < 0 || i.minutes < 0 || !Number.isFinite(i.oblique ?? 0) || !Number.isFinite(i.cc ?? 0)) throw new RangeError("Invalid simulation input");
+  const d = Math.max(0.5, i.distance);
   const rateAtDistance = baseRate * (D_REF / d) ** 2 * sideFactor(i.side ?? "lateral") * angulationFactor(i.oblique ?? 0, i.cc ?? 0);
   const unshielded = rateAtDistance * i.minutes;
-  let transmission = Math.exp(-MU_PB * APRONS[i.apron].mmPb);
-  if (i.thyroidGlasses) transmission *= THYROID_GLASSES_FACTOR;
+  const transmission = Math.exp(-MU_PB * APRONS[i.apron].mmPb);
   return { baseRate, rateAtDistance, unshielded, attenuation: 1 - transmission, dose: unshielded * transmission };
 }
 
@@ -126,9 +128,9 @@ export function riskLevel(usv: number): RiskLevel {
   return "danger";
 }
 export const RISK_LABEL: Record<RiskLevel, string> = {
-  safe: "Seguro / Baixo Risco",
-  warn: "Atenção / Requer Otimização",
-  danger: "Exposição Elevada",
+  safe: "Exposição simulada baixa",
+  warn: "Exposição simulada intermédia",
+  danger: "Exposição simulada elevada",
 };
 
 export function fmt(n: number, digits = 2) {

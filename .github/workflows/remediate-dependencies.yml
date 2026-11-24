@@ -1,0 +1,67 @@
+name: AlaraBO dependency remediation
+on:
+  push:
+    branches: [scientific-reliability-v1-1]
+    paths: ['.github/workflows/remediate-dependencies.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  repair:
+    if: github.ref == 'refs/heads/scientific-reliability-v1-1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.5'
+      - name: Update direct vulnerable dependencies
+        run: |
+          bun -e 'const p = await Bun.file("package.json").json(); p.devDependencies.vite = "^8.1.6"; p.devDependencies.vitest = "^4.1.12"; p.dependencies.zod = "^4.6.6"; await Bun.write("package.json", JSON.stringify(p, null, 2) + "\n");'
+          bun install
+      - name: Repair remaining vulnerable dependencies
+        run: |
+          if ! bun audit; then
+            bun audit fix || true
+          fi
+          if ! bun audit; then
+            bun audit fix --latest || true
+          fi
+          bun install --frozen-lockfile
+          bun audit
+      - run: bun run test
+      - run: bun run build
+      - name: Save verified manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-dependency-manifests
+          path: |
+            package.json
+            bun.lock
+          if-no-files-found: error
+  publish:
+    needs: repair
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: scientific-reliability-v1-1
+      - name: Ensure branch has not changed
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-dependency-manifests
+      - name: Commit tested dependency manifests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- package.json bun.lock
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Fix audited dependency vulnerabilities"
+          git push origin HEAD:scientific-reliability-v1-1

@@ -1,26 +1,31 @@
 # AlaraBO
 
-Implement exactly the screenshot and nothing else
+Interactive educational simulator for occupational radiation protection in operating rooms and fluoroscopy-guided procedures.
 
-This project was built with [Lovable](https://lovable.dev).
+**Live demonstration:** https://alarabo.lovable.app/
 
-**Live app**: https://alarabo.lovable.app
+AlaraBO illustrates how time, distance, apron shielding, staff position and C-arm angulation influence a simplified radiation exposure scenario. The project originated in a Portuguese hospital department and, according to its maintainer, is used by approximately 20 healthcare professionals with positive informal feedback.
 
-## Build with Lovable
+## Features
+- Interactive operating-room schematic and four staff roles
+- Six illustrative procedure presets and adjustable fluoroscopy time
+- Distance, apron and C-arm controls
+- Local scenario history and educational comparisons
+- Portuguese-language ALARA education
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d741def3-49dc-47e5-8951-729d03eb57bf).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+**Educational use only.** Numerical outputs are illustrative proxies, not validated effective dose, personal dosimetry or a basis for clinical decisions. See [methodology](METHODOLOGY.md) and [references](REFERENCES.md).
 
 ## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+React, TypeScript, TanStack Start, Vite and Vitest. Built originally with Lovable.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+git clone https://github.com/clarxpt/alarabo.git
+cd alarabo
+bun install --frozen-lockfile
+bun run dev
+bun run test
+bun run build
 ```
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md). The proposed MIT license requires maintainer confirmation of rights and third-party notices before adoption.

@@ -31,7 +31,8 @@ function Hist() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Relatório de Sessão</h1>
-          <p className="text-muted-foreground">{rows.length} cenários · dose acumulada {fmt(total)} µSv</p>
+          <p className="text-xs text-muted-foreground">Cenários fictícios de diferentes funções; não é um registo dosimétrico pessoal.</p>
+          <p className="text-muted-foreground">{rows.length} cenários · soma de valores simulados {fmt(total)} µSv</p>
         </div>
         {rows.length > 0 && (
           <button onClick={() => { clearHistory(); setRows([]); }} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-muted">
@@ -56,7 +57,7 @@ function Hist() {
                   <td className="px-4 py-2 font-mono">{r.minutes.toFixed(1)} min</td>
                   <td className="px-4 py-2 font-mono">{r.distance.toFixed(2)} m</td>
                   <td className="px-4 py-2">{APRONS[r.apron].label}{r.thyroidGlasses ? " + tiroide/óculos" : ""}</td>
-                  <td className={`px-4 py-2 font-mono font-semibold ${riskText[riskLevel(r.dose)]}`}>{fmt(r.dose)} µSv</td>
+                  <td className={`px-4 py-2 font-mono font-semibold ${riskText[riskLevel(r.dose)]}`}>{fmt(r.dose)} µSv {r.modelVersion !== 2 && <span className="text-xs text-muted-foreground">(modelo anterior)</span>}</td>
                 </tr>
               ))}
             </tbody>

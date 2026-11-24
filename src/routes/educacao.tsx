@@ -18,8 +18,8 @@ export const Route = createFileRoute("/educacao")({
 
 const items = [
   { icon: Clock, title: "Tempo", formula: "D = Ḋ × t", text: "A dose é diretamente proporcional ao tempo de exposição. Use fluoroscopia pulsada, last-image-hold e pedal só quando necessário." },
-  { icon: Ruler, title: "Distância", formula: "D ∝ 1 / d²", text: "Duplicar a distância à fonte reduz a dose para um quarto. Um passo atrás é a medida de proteção mais barata e eficaz." },
-  { icon: Shield, title: "Blindagem", formula: "D = D₀ · e^(−μx)", text: "Aventais de 0.25 mm Pb atenuam ~85–90% e de 0.5 mm Pb ~97–98% da radiação dispersa. Protetor de tiroide e óculos plumbo-vidro protegem órgãos sensíveis." },
+  { icon: Ruler, title: "Distância", formula: "D ∝ 1 / d²", text: "No modelo de fonte pontual, duplicar a distância reduz a dose para um quarto; a dispersão no doente pode diferir. Um passo atrás é a medida de proteção mais barata e eficaz." },
+  { icon: Shield, title: "Blindagem", formula: "D = D₀ · e^(−μx)", text: "Neste modelo ilustrativo, 0,25 e 0,5 mm Pb atenuam cerca de 86% e 98%. A transmissão real depende do espectro, geometria e material. Protetor de tiroide e óculos plumbo-vidro protegem órgãos sensíveis." },
 ];
 
 function Edu() {
@@ -38,7 +38,7 @@ function Edu() {
         ))}
       </div>
       <div className="panel mt-6 p-6 text-sm text-muted-foreground">
-        <b className="text-foreground">Nota:</b> este simulador usa um modelo educativo simplificado. Os valores não substituem dosimetria pessoal nem avaliação por um especialista em física médica.
+        <b className="text-foreground">Nota:</b> este simulador usa um modelo educativo simplificado. Os valores não representam uma dose efetiva validada e não substituem dosimetria pessoal nem avaliação por um especialista em física médica.
       </div>
     </AppShell>
   );

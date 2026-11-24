@@ -32,7 +32,8 @@ jobs:
           bun install --frozen-lockfile
           bun audit
       - name: Verify TypeScript parser after scoped override
-        run: bun -e 'import { parse } from "@typescript-eslint/typescript-estree"; parse("const n: number = 1");'
+        run: |
+          bun -e 'import { parse } from "@typescript-eslint/typescript-estree"; parse("const n: number = 1");'
       - run: bun run test
       - run: bun run build
       - name: Save verified manifests

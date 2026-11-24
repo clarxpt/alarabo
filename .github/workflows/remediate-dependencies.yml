@@ -19,7 +19,7 @@ jobs:
           bun-version: '1.4.5'
       - name: Update direct vulnerable dependencies
         run: |
-          bun -e 'const p = await Bun.file("package.json").json(); p.devDependencies.vite = "^8.1.6"; p.devDependencies.vitest = "^4.1.12"; p.dependencies.zod = "^4.6.6"; await Bun.write("package.json", JSON.stringify(p, null, 2) + "\n");'
+          bun -e 'const p = await Bun.file("package.json").json(); p.devDependencies.vite = "^8.1.6"; p.devDependencies.vitest = "^4.1.12"; p.dependencies.zod = "^4.6.6"; p.overrides["@typescript-eslint/typescript-estree"] = { minimatch: "^11.0.1" }; await Bun.write("package.json", JSON.stringify(p, null, 2) + "\n");'
           bun install
       - name: Repair remaining vulnerable dependencies
         run: |
@@ -27,10 +27,12 @@ jobs:
             bun audit fix || true
           fi
           if ! bun audit; then
-            bun audit fix --latest || true
+            bun audit fix || true
           fi
           bun install --frozen-lockfile
           bun audit
+      - name: Verify TypeScript parser after scoped override
+        run: bun -e 'import { parse } from "@typescript-eslint/typescript-estree"; parse("const n: number = 1");'
       - run: bun run test
       - run: bun run build
       - name: Save verified manifests

@@ -12,7 +12,7 @@ describe("Reference values for comparisons", () => {
     expect(CHEST_XRAY_USV).toBe(20);
   });
 
-  it("uses ~3 mSv/year of natural background in Portugal", () => {
+  it("uses an illustrative 3 mSv/year natural background scenario", () => {
     expect(PT_BACKGROUND_USV_DAY).toBeCloseTo(3000 / 365, 3);
     expect(PT_BACKGROUND_USV_DAY).toBeCloseTo(8.22, 1);
   });

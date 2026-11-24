@@ -13,13 +13,12 @@ type Mode = "auto" | "pc" | "mobile";
 export function AppShell({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>("auto");
   useEffect(() => {
-    const m = localStorage.getItem("alara-view") as Mode | null;
-    if (m) setMode(m);
+    try { const m = localStorage.getItem("alara-view"); if (m === "pc" || m === "mobile" || m === "auto") setMode(m); } catch { /* storage unavailable */ }
   }, []);
   const choose = (m: Mode) => {
     const next = mode === m ? "auto" : m;
     setMode(next);
-    localStorage.setItem("alara-view", next);
+    try { localStorage.setItem("alara-view", next); } catch { /* view still works */ }
   };
   const width = mode === "mobile" ? "max-w-[430px]" : "max-w-7xl";
   return (
@@ -38,6 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {nav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
+                aria-label={label}
                 to={to}
                 activeOptions={{ exact: true }}
                 className="flex items-center gap-2 rounded-md px-3 py-2 text-sm opacity-75 transition hover:opacity-100 data-[status=active]:bg-primary data-[status=active]:opacity-100"

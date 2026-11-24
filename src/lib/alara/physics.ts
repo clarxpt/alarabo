@@ -34,7 +34,7 @@ export const D_REF = 1.0;
 export const ICRP_ANNUAL_USV = 20000;
 /** Raio-X de tórax PA ≈ 0,02 mSv = 20 µSv. */
 export const CHEST_XRAY_USV = 20;
-/** Fundo natural em Portugal ≈ 3 mSv/ano ≈ 8,2 µSv/dia. */
+/** Illustrative natural-background scenario: 3 mSv/year, not a verified national average. */
 export const PT_BACKGROUND_USV_DAY = 3000 / 365;
 
 /** Scatter is higher on the X-ray tube (ampola) side and lower on the detector side. */
@@ -68,8 +68,9 @@ export const SIDE_LABEL: Record<SideZone, string> = {
  * C-arm angulation → operator scatter dose factor (relative to PA 0°/0°).
  * Source: Kuon E. et al., "Identification of less-irradiating tube angulations
  * in invasive cardiology", JACC 2004;44(7):1420-8 (doi:10.1016/j.jacc.2004.06.057).
- * Measured operator dose rose 10.6× towards LAO 100°, 2.4× towards RAO 100°,
- * and ~2.5× towards 30° cranial/caudal. Intermediate angles are linearly
+ * The abstract reports mean operator ratios towards LAO 100° and RAO 100°
+ * across cranial/caudal projections, and ~2.5× towards 30° cranial/caudal
+ * across oblique projections; these are not isolated-axis calibrations. Intermediate angles are linearly
  * interpolated (educational simplification).
  */
 export const LAO_100_FACTOR = 10.6;

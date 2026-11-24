@@ -8,7 +8,7 @@ R is the illustrative reference rate at 1 m (µSv/min): orthopaedics 8, cardiolo
 
 The apron coefficient 8/mm is illustrative. Thyroid collars and lead glasses protect particular organs; no global numerical reduction is assigned. Display categories at 5 and 20 µSv are pedagogical, not safety limits.
 
-The 20 mSv annual effective-dose limit is shown solely as a numerical educational reference, not an allowable exposure budget. Chest X-ray (20 µSv) and natural background (3 mSv/year illustrative scenario) are contextual numerical comparisons, not equivalent risks or quantities. Saved scenarios are not personal dose records. Older records are marked separately; annual comparisons exclude prior model versions.
+The 20 mSv annual effective-dose limit is shown solely as a numerical educational reference, not an allowable exposure budget. Chest X-ray (20 µSv) and natural background (3 mSv/year illustrative scenario) are displayed independently as reference values, not calculated equivalents. Saved scenarios are not personal dose records; totals across different roles and models are not presented as a personal dose. The annual effective-dose limit is not used to calculate a percentage or a number of permitted procedures. Older records are marked separately; the saved-scenario sum excludes prior model versions.
 
 ## Validation needed
 Trace each preset to measurements or published data with matching geometry, equipment, beam quality and dose quantity. Validate using appropriate dosimetry and medical physics expertise. Test sensitivity and uncertainty before making quantitative claims. Software unit tests verify arithmetic only, not physical validity.

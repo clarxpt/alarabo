@@ -29,3 +29,6 @@ bun run build
 
 ## Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md). Original project code is available under the [MIT License](LICENSE). Third-party components remain subject to their respective licenses and notices.
+
+## Security and validation
+The CI pipeline runs tests, a production build, dependency advisory checks and a limited pattern-based check of reachable Git history. These are not a full security audit or scientific calibration. See [SECURITY.md](SECURITY.md).

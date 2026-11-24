@@ -19,9 +19,12 @@ export function loadHistory(): SessionRecord[] {
     return [];
   }
 }
-export function saveRecord(r: SessionRecord) {
-  localStorage.setItem(KEY, JSON.stringify([r, ...loadHistory()].slice(0, 200)));
+export function saveRecord(r: SessionRecord): boolean {
+  try {
+    localStorage.setItem(KEY, JSON.stringify([r, ...loadHistory()].slice(0, 200)));
+    return true;
+  } catch { return false; }
 }
-export function clearHistory() {
-  localStorage.removeItem(KEY);
+export function clearHistory(): boolean {
+  try { localStorage.removeItem(KEY); return true; } catch { return false; }
 }

@@ -28,4 +28,4 @@ bun run build
 ```
 
 ## Contributing
-See [CONTRIBUTING.md](CONTRIBUTING.md). The proposed MIT license requires maintainer confirmation of rights and third-party notices before adoption.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Original project code is available under the [MIT License](LICENSE). Third-party components remain subject to their respective licenses and notices.
